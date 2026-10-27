@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><script id="cafe-v78-early-keyboard-escape">
+/* Handle Escape at capture phase in every same-origin portfolio iframe. */
+(function(){
+ if(window===parent || !new URLSearchParams(location.search).has('cafe'))return;
+ function nested(){
+  const d=document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]');
+  if(d&&d.getClientRects().length)return true;
+  const viewer=document.getElementById('comparison-viewer');
+  return !!(viewer&&viewer.getClientRects().length&&(viewer.classList.contains('open')||viewer.classList.contains('is-open')||viewer.getAttribute('aria-hidden')==='false'));
+ }
+ window.addEventListener('keydown',function(e){
+  if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||e.metaKey||e.ctrlKey||e.altKey||nested())return;
+  e.preventDefault();e.stopImmediatePropagation();
+  try{if(typeof parent.cafeCaseKeyboardEscape==='function'&&parent.cafeCaseKeyboardEscape(window))return;}catch(_e){}
+  parent.postMessage({type:'cafe-v77-escape'},'*');
+ },true);
+})();
+</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f8f7fb"><link rel="icon" type="image/svg+xml" href="../../../assets/favicon-sparkle.svg?v=2"><title>Streamline client renewals — HealthSherpa | Amber Tang</title><meta name="description" content="Streamlining HealthSherpa client renewals for the 2026 enrollment year: discovery, design explorations, agent testing, and the final experience."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../../style.css?v=resume-close-centered-20261018"><script src="../../../analytics.js?v=resume-close-centered-20261018" defer></script></head><body><div id="app"></div><script src="../../../app.js?v=resume-close-centered-20261018" defer></script><script defer src="../../../../assets/cafe-keyboard-child.js"></script></body></html>

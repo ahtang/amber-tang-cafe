@@ -1,0 +1,9 @@
+OPENING THE PORTFOLIO
+
+Unzip this entire archive, then double-click index.html. Keep all folders and files together. No launcher or Terminal is required.
+
+The resume modal uses a high-resolution image for local viewing, with zoom and fit controls. The original PDF remains available through Download PDF. When hosted, the PDF viewer uses the full PDF renderer.
+
+UPDATING GITHUB PAGES
+
+Copy these website files into your existing GitHub repository, preserving your existing CNAME. Commit and push with GitHub Desktop.

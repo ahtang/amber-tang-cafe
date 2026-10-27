@@ -1,0 +1,985 @@
+<!doctype html><html lang="en"><head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amber’s Portfolio Café — Level Editor</title><style>
+html,body{margin:0;background:#000;color:#f3eddc;font-family:system-ui,sans-serif;width:100%;height:100%;overflow:hidden}
+#app{width:100%;height:100vh;height:100dvh;min-height:0;display:flex;align-items:stretch;background:#000}
+#stage{flex:1 1 0;min-width:0;min-height:0;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;background:#000}
+#stage canvas{touch-action:none;display:block;flex:none;width:min(calc(100% - 28px),calc((100dvh - 28px) * 1874 / 1398));height:auto;max-width:100%;aspect-ratio:1874/1398;image-rendering:auto;touch-action:none;outline:none}
+#sidebar{width:300px;flex:0 0 300px;min-height:0;display:flex;flex-direction:column;background:#1d2521;border-left:1px solid #53624e;padding:16px;gap:12px;overflow-y:auto;font-size:13px}
+#sidebar h1{font-size:17px;margin:0}#sidebar h2{font-size:14px;margin:5px 0} .muted{color:#b4c3b3;font-size:12px;line-height:1.5}
+button,select,input{font:inherit}button,select,input[type=number],input[type=text]{border:1px solid #667764;background:#2b3a30;color:#f8f1e5;border-radius:7px;padding:8px}button{cursor:pointer}button:hover{background:#415444}button.on{background:#806445;border-color:#e4bc80}button:disabled{opacity:.45;cursor:default}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.tabs button{font-size:12px;padding:9px 3px}.controls{display:flex;gap:6px;flex-wrap:wrap}.controls button{font-size:12px}
+label{display:grid;gap:4px;color:#deded4}input[type=text],input[type=number],select{min-width:0;width:100%}input[type=checkbox]{accent-color:#a5d3a2}
+fieldset{border:1px solid #4a624f;border-radius:8px;padding:9px;display:grid;gap:9px;margin:0}legend{font-size:12px;color:#bed5b7} .row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pill{background:#304d38;color:#d7f8d3;padding:4px 7px;border-radius:6px;font-size:11px}#status{padding:8px;background:#2d3b30;border-radius:8px;min-height:34px;font-size:12px;line-height:1.4}#selectedSummary{font-size:12px;color:#d3c5a9;overflow-wrap:anywhere}
+footer{margin-top:auto;display:grid;gap:8px}.hint{position:absolute;left:14px;bottom:12px;background:#17261cdb;padding:7px 10px;border-radius:7px;font-size:12px;pointer-events:none;max-width:80%;color:#f3efd9}#modal[hidden]{display:none}#modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:40;padding:20px}#dialog{background:#f8eddc;color:#294032;max-width:470px;width:100%;border-radius:14px;padding:22px;box-shadow:0 20px 90px #0009}#dialog button{color:white}
+#fileInput{display:none}#editOptions{display:grid;gap:10px}
+@media(max-width:800px){#app{flex-direction:column}#sidebar{order:2;width:100%;flex:0 0 43dvh;height:43dvh;min-height:0;max-height:43dvh;border-left:0;border-top:1px solid #53624e;padding:10px}#stage{order:1;min-height:0;flex:1 1 57dvh}#stage canvas{width:min(calc(100% - 16px),calc((57dvh - 16px) * 1874 / 1398))}#sidebar h1{font-size:14px}.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}.hint{font-size:10px;bottom:5px;left:5px}#sidebar .muted{font-size:11px}}
+
+/* Persistent music player */
+#musicModal[hidden]{display:none!important}
+#musicModal{position:fixed;inset:0;background:#000b;z-index:60;display:grid;place-items:center;padding:20px;font-family:system-ui,sans-serif}
+#musicDialog{background:#fff2dc;color:#2b362d;width:min(510px,95vw);max-height:min(760px,90dvh);display:flex;flex-direction:column;border:3px solid #69482e;border-radius:16px;box-shadow:0 20px 60px #0009;overflow:hidden}
+.music-header{padding:14px 17px 9px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #cfb89b}
+.music-header h2{margin:0;font-size:20px;color:#553824}
+#musicClose{border:1px solid #b49b7c;color:#4b3527;background:#fff9e9;font-weight:700;font-size:19px;line-height:1;min-width:37px;min-height:37px;border-radius:8px;cursor:pointer}
+#musicClose:hover,#musicClose:focus-visible{background:#f5dfbe}
+.music-now{padding:10px 16px;background:#f5e4c9;display:flex;flex-direction:column;gap:9px}
+#musicNowPlaying{font-size:13px;min-height:20px;color:#503d2d}
+.music-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.music-buttons button{padding:8px 12px;border:1px solid #907454;background:#fffaf0;color:#45301e;font-weight:700;border-radius:8px;cursor:pointer}
+.music-buttons button:hover,.music-buttons button:focus-visible{background:#dfedce}
+#musicProgress{font-size:12px;color:#6b513e}
+.music-list{overflow-y:auto;min-height:0;padding:9px 12px 14px;display:flex;flex-direction:column;gap:4px}
+.music-track{background:#fffaf1!important;color:#45301e!important;border:1px solid #e1d1b9!important;border-radius:9px!important;display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:11px 12px!important;cursor:pointer;font-size:13px}
+.music-track:hover,.music-track:focus-visible{border-color:#8a7049!important;background:#e7eed8!important;outline:2px solid #497357;outline-offset:1px}
+.music-track[aria-current=true]{background:#dcebd2!important;border-color:#628665!important;font-weight:750}
+.music-track .playglyph{font-size:18px;min-width:22px;text-align:center}
+.music-track span:last-child{flex:1;overflow-wrap:anywhere}
+.music-footnote{padding:8px 15px 12px;border-top:1px solid #dfccb1;font-size:12px;color:#63513c}
+#stage.asset-dragover{outline:4px dashed #b3eabc;outline-offset:-9px;background:#1a2f23}
+
+/* V27 — unified neutral-warm-white modal system; project cards load their exact site CSS in a nested browsing context. */
+#portfolioSandbox .sandbox-inner{left:6%;right:6%;top:8%;bottom:8%;background:#fbf9f5!important;border:1px solid #ddd6ce!important;border-radius:18px!important;box-shadow:0 14px 44px #21170f2c!important}
+#portfolioSandbox #sandboxToolbar{background:#fbf9f5!important;border-bottom:1px solid #e9e1d9!important;border-radius:18px 18px 0 0!important}
+#portfolioSandbox #sandboxBody,#portfolioSandbox #sandboxList,#portfolioSandbox #sandboxFrame,#portfolioSandbox #resumeStandalone{background:#fbf9f5!important}
+#sandboxList{box-sizing:border-box;padding:0!important;border:0!important;width:100%;height:100%;display:block;background:#fbf9f5!important}
+#sandboxList[hidden]{display:none!important}
+#sandboxFrame{border:0!important;background:#fbf9f5!important}
+#musicDialog,#dialog{background:#fbf9f5!important;color:#2d2826!important;border:1px solid #ddd6ce!important;border-radius:18px!important;box-shadow:0 18px 70px #0007!important}
+.music-header,.music-now{background:#fbf9f5!important;border-color:#e8dfd5!important}
+.music-header h2,#musicNowPlaying{color:#302a28!important}
+#musicDialog button,.music-buttons button,#musicClose,#closeDialog{background:#fff!important;border:1px solid #d9d0c7!important;color:#302a28!important;border-radius:10px!important}
+#musicDialog button:hover,#musicDialog button:focus-visible,#closeDialog:hover{background:#f1ebe4!important}
+#musicDialog .music-song,#musicDialog .music-row,#musicDialog .music-list-item{background:#fbf9f5!important;color:#302a28!important}
+#musicDialog .music-song:hover,#musicDialog .music-row:hover{background:#f1ebe4!important}
+#dialogOverlay #dialog,#dialog{background:#fbf9f5!important;border:1px solid #ddd6ce!important}
+#sandboxQuick button{background:#fbf9f5!important;color:#332e2b!important;border:1px solid #d9d0c7!important}
+</style><style id="cafe-sandbox-style">
+#sandboxBadge{position:fixed;z-index:90;top:10px;left:12px;background:#6e532c;color:#fff;font:700 11px system-ui;padding:8px 12px;border-radius:8px;letter-spacing:.12em;pointer-events:none;box-shadow:0 3px 18px #0008}
+#portfolioSandbox{position:fixed;z-index:100;display:none;background:#f8f7fb;color:#24212b;overflow:hidden;border:1px solid #d6d0e0;box-shadow:0 15px 80px #000a;font-family:Manrope,system-ui,sans-serif}
+#portfolioSandbox.is-open{display:flex;flex-direction:column}
+#sandboxToolbar{background:#fff;min-height:54px;display:flex;gap:12px;padding:8px 14px;align-items:center;justify-content:space-between;border-bottom:1px solid #e7e5ea;flex:none}
+#sandboxToolbar button{color:#302b3b;background:white;border:1px solid #d8d4df;border-radius:9px;padding:9px 12px;cursor:pointer;font:600 13px system-ui}
+#sandboxToolbar button:focus-visible,.sandbox-card:focus-visible{outline:3px solid #784ac0;outline-offset:2px}
+#sandboxToolbar h2{margin:0;font-size:16px;color:#30283d}
+#sandboxBody{position:relative;flex:1;min-height:0;overflow:hidden}
+#sandboxList{position:absolute;inset:0;overflow:auto;padding:clamp(15px,3vw,46px);background:#faf9fc}
+#sandboxList .sandbox-intro{max-width:760px;margin:0 auto 24px}
+#sandboxList h1{font-size:clamp(24px,3.1vw,40px);margin:0 0 8px}
+.sandbox-card{display:grid;grid-template-columns:minmax(0,44%) 1fr;width:100%;max-width:940px;margin:0 auto 20px;padding:0;overflow:hidden;text-align:left;cursor:pointer;background:white;border:1px solid #e2dfe8;border-radius:16px;color:#262231;box-shadow:0 3px 12px #3430440e}
+.sandbox-card img{width:100%;height:100%;min-height:175px;max-height:260px;object-fit:cover;background:#e6dcfa}
+.sandbox-card-copy{display:flex;flex-direction:column;gap:9px;justify-content:center;padding:22px}
+.sandbox-card small{font-size:11px;text-transform:uppercase;color:#685a80;font-weight:750;letter-spacing:.08em}
+.sandbox-card strong{font-size:clamp(17px,1.9vw,24px);line-height:1.25}
+.sandbox-card span{font-size:13px;color:#686375}
+#sandboxFrame{display:none;border:0;width:100%;height:100%;background:#fff;position:absolute;inset:0}
+#sandboxFrame.is-open{display:block}
+#sandboxHint{font-size:11px;color:#736d80;text-align:center}
+@media(max-width:650px){#sandboxToolbar{min-height:42px;padding:5px 8px;gap:5px}#sandboxToolbar h2{font-size:12px}#sandboxToolbar button{font-size:11px;padding:7px}.sandbox-card{grid-template-columns:1fr}.sandbox-card img{height:150px;min-height:0}.sandbox-card-copy{padding:14px}}
+
+/* Portfolio content stays inside the room; the original frame artwork is drawn on top. */
+#portfolioSandbox{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important}
+#portfolioSandbox .sandbox-inner{position:absolute;left:3.4%;top:5.3%;right:3.4%;bottom:5.2%;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#f8f7fb;z-index:1}
+#sandboxFrameBorder{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:9;image-rendering:auto}
+#portfolioSandbox #sandboxToolbar{position:relative;z-index:2;border-radius:0;box-shadow:none}
+#portfolioSandbox.is-resume #sandboxToolbar,#portfolioSandbox.is-resume #sandboxHint{display:none}
+#portfolioSandbox.is-resume #sandboxBody{background:#424247}
+#resumeStandalone[hidden]{display:none!important}
+#resumeStandalone{position:absolute;inset:0;display:flex;flex-direction:column;color:#2f2b38;background:#46444a}
+.resume-actions{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px;background:#f8f7fb;border-bottom:1px solid #d7d3de}
+.resume-actions strong{margin-right:auto;font-size:14px}
+.resume-actions button,.resume-actions a{background:white;border:1px solid #ccc5d7;border-radius:7px;color:#282231;text-decoration:none;padding:7px 10px;cursor:pointer;font:600 12px system-ui}
+.resume-actions button:hover,.resume-actions a:hover{background:#ece4f5}
+.resume-actions button:focus-visible,.resume-actions a:focus-visible{outline:3px solid #8150c0;outline-offset:2px}
+#resumeZoomLabel{min-width:45px;text-align:center;font:600 12px system-ui}
+#resumeDocument{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;align-items:flex-start;justify-content:flex-start;padding:16px}
+#resumePageHost{margin:auto;flex:none;background:white;box-shadow:0 4px 18px #0007;line-height:0}
+#resumePageHost canvas,#resumePageHost img{display:block;max-width:none}
+#resumeLoadStatus{position:absolute;bottom:8px;left:16px;color:#f9f7ff;background:#28272dbb;font:12px system-ui;padding:5px 8px;border-radius:5px}
+@media(max-width:720px){.resume-actions{gap:4px;padding:6px}.resume-actions strong{width:100%;text-align:center;margin:0}.resume-actions button,.resume-actions a{font-size:10px;padding:6px}}
+
+/* V26: Unified warm-white portfolio surface matching the main portfolio visual identity. */
+#portfolioSandbox{background:transparent!important;border:0!important;box-shadow:none!important}
+#portfolioSandbox .sandbox-inner{
+ left:5.6%!important;right:5.6%!important;top:6.2%!important;bottom:6.2%!important;
+ background:#fbf9f5!important;color:#29242a;border:1px solid #ded9d0!important;
+ border-radius:18px!important;box-shadow:0 12px 45px rgba(28,21,18,.22)!important;
+ overflow:hidden!important;isolation:isolate;
+}
+#sandboxToolbar{background:#fbf9f5!important;border-bottom:1px solid #e7e0d6!important;min-height:52px!important}
+#sandboxToolbar h2{color:#29242a!important}
+#sandboxToolbar button,.resume-actions button,.resume-actions a{background:#fffdf9!important;border:1px solid #ddd7cf!important;border-radius:10px!important;color:#363039!important}
+#sandboxBody,#sandboxList,#sandboxFrame,#resumeStandalone{background:#fbf9f5!important}
+#sandboxList{padding:clamp(18px,2.6vw,38px)!important}
+#sandboxList .sandbox-intro{max-width:1100px!important;margin:0 auto 24px!important}
+#sandboxList .sandbox-intro h1{font-weight:750;letter-spacing:-.035em}
+#sandboxList .sandbox-intro p{color:#68616a}
+.sandbox-card{
+ display:grid!important;grid-template-columns:34% 66%!important;
+ max-width:1140px!important;width:100%!important;min-height:330px;
+ margin:0 auto 22px!important;overflow:hidden!important;
+ background:#fff!important;border:1px solid #dcd2e6!important;
+ border-radius:15px!important;box-shadow:none!important;
+ transition:box-shadow .16s ease,transform .16s ease;
+}
+.sandbox-card:hover{box-shadow:0 14px 28px #29195d19!important;transform:translateY(-2px)}
+.sandbox-card .sandbox-card-art{
+ grid-column:2;grid-row:1;display:flex;justify-content:center;align-items:center;
+ min-width:0;overflow:hidden;position:relative;
+ background:linear-gradient(130deg,#5187d8 0%,#3a52b7 43%,#5c2ab1 100%);
+ padding:clamp(12px,2.5vw,46px)!important;
+}
+.sandbox-card:nth-of-type(3n+2) .sandbox-card-art{background:linear-gradient(130deg,#f1bee6,#ad73cf,#6643b4)}
+.sandbox-card:nth-of-type(3n) .sandbox-card-art{background:linear-gradient(130deg,#80b7ca,#5877c0,#5842a0)}
+.sandbox-card .sandbox-card-art img{
+ width:100%!important;height:auto!important;max-width:100%!important;
+ max-height:325px!important;min-height:0!important;object-fit:contain!important;
+ border-radius:5px;box-shadow:0 10px 30px #20124d33;background:transparent!important;
+}
+.sandbox-card-copy{grid-column:1;grid-row:1;padding:clamp(20px,3vw,48px)!important;gap:15px!important;align-items:flex-start!important}
+.sandbox-card-copy small{color:#6841b2!important;font-weight:800!important;letter-spacing:.12em!important;font-size:12px!important}
+.sandbox-card-copy strong{font-size:clamp(20px,2.25vw,30px)!important;line-height:1.16!important;letter-spacing:-.025em;color:#252128!important}
+.sandbox-card-copy .sandbox-card-summary{font-size:clamp(13px,1.3vw,17px)!important;line-height:1.55;color:#443e47!important}
+.sandbox-card-copy .sandbox-card-cta{border:1px solid #decdf5;color:#7244c0!important;border-radius:100px;padding:9px 17px;font-weight:750;margin-top:8px}
+#sandboxHint{color:#5d565f!important;background:#fbf9f5!important;border-top:1px solid #eee9e1;padding:8px 12px!important}
+#resumeStandalone{background:#fbf9f5!important}
+.resume-actions{background:#fbf9f5!important;border-bottom:1px solid #e7e0d6!important}
+#resumeDocument{background:#eae6e2!important}
+#resumeLoadStatus{color:#fff!important}
+#sandboxFrameBorder{pointer-events:none!important}
+@media(max-width:760px){
+ #portfolioSandbox .sandbox-inner{left:4.8%!important;right:4.8%!important;top:5.8%!important;bottom:5.8%!important;border-radius:12px!important}
+ .sandbox-card{grid-template-columns:1fr!important;min-height:0!important}
+ .sandbox-card .sandbox-card-art{grid-column:1;grid-row:1;min-height:170px}
+ .sandbox-card-copy{grid-column:1;grid-row:2;padding:20px!important}
+ .sandbox-card .sandbox-card-art img{max-height:220px!important}
+ #sandboxToolbar{padding:6px!important;gap:5px!important}
+ #sandboxToolbar h2{font-size:12px!important}
+}
+</style>
+<style id="cafe-v28-modal-layout">
+/* Match the original portfolio design-system typography across every café dialog. */
+#portfolioSandbox,#portfolioSandbox .sandbox-inner,#portfolioSandbox button,
+#portfolioSandbox input,#portfolioSandbox select,
+#musicModal,#musicDialog,#musicDialog button,#modal,#dialog,#dialog button {
+  font-family:'DM Sans',sans-serif!important;
+}
+#sandboxToolbar h2,.resume-actions strong,.music-header h2,#dialogTitle{
+  font-family:'Manrope',sans-serif!important;font-weight:750!important;letter-spacing:-.035em!important;
+}
+#sandboxToolbar h2{font-size:clamp(14px,1.35vw,20px)!important;line-height:1.25!important}
+#dialogTitle,.music-header h2{font-size:clamp(18px,1.9vw,25px)!important;line-height:1.25!important}
+#dialogBody,#musicNowPlaying,#sandboxHint{font-family:'DM Sans',sans-serif!important;line-height:1.5!important}
+#sandboxToolbar button,.resume-actions button,.resume-actions a,#musicDialog button,#closeDialog{
+  font-family:'DM Sans',sans-serif!important;font-weight:650!important;
+}
+/* All overlays are centered relative to the same illustrated game canvas, never the browser viewport. */
+#modal,#musicModal{position:fixed!important;inset:auto!important;box-sizing:border-box;display:grid;place-items:center;
+  padding:clamp(10px,3%,44px)!important;background:rgba(25,17,12,.34)!important;
+  overflow:hidden!important;z-index:65!important;
+}
+#modal[hidden],#musicModal[hidden]{display:none!important}
+#dialog,#musicDialog{box-sizing:border-box;max-width:min(560px,94%);width:min(510px,94%);max-height:92%;margin:auto!important;
+  background:#fbf9f5!important;border:1px solid #ddd6ce!important;border-radius:18px!important;
+  box-shadow:0 12px 38px rgba(33,23,14,.23)!important;color:#25212a!important;
+}
+#musicDialog{height:auto;min-height:0}
+.music-list{min-height:0;overflow:auto;overscroll-behavior:contain}
+.music-track{font-family:'DM Sans',sans-serif!important}
+/* Fixed header / fixed footer; only the content region scrolls, entirely inside the modal. */
+#portfolioSandbox .sandbox-inner{display:flex!important;flex-direction:column!important;min-height:0!important;overflow:hidden!important}
+#portfolioSandbox #sandboxToolbar{position:relative!important;flex:0 0 auto!important;z-index:3!important;box-sizing:border-box!important}
+#portfolioSandbox #sandboxHint{position:relative!important;flex:0 0 auto!important;z-index:3!important;box-sizing:border-box!important}
+#portfolioSandbox #sandboxBody{position:relative!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}
+#portfolioSandbox #sandboxList,#portfolioSandbox #sandboxFrame{
+ position:absolute!important;top:0!important;bottom:0!important;left:0!important;right:0!important;
+ width:100%!important;height:100%!important;max-height:100%!important;
+ box-sizing:border-box!important;margin:0!important;padding:0!important;overflow:auto!important;
+ border:0!important;overscroll-behavior:contain!important;
+}
+#sandboxList[hidden]{display:none!important}
+#sandboxFrame:not(.is-open){display:none!important}
+#resumeStandalone{min-height:0!important;overflow:hidden!important}
+#resumeDocument{min-height:0!important;overflow:auto!important}
+</style>
+
+<style id="cafe-v29-gameplay-recovery">
+#modal[hidden],#musicModal[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#portfolioSandbox:not(.is-open){display:none!important;visibility:hidden!important;pointer-events:none!important}
+#portfolioSandbox.is-open{pointer-events:auto}
+#game{touch-action:none}
+</style>
+<style id="cafe-v30-visible-dialogs-and-fonts">
+/* Same font imports and typography choices as the original portfolio. */
+#portfolioSandbox, #portfolioSandbox button, #portfolioSandbox input, #portfolioSandbox select,
+#modal, #dialog, #musicModal, #musicDialog, #musicDialog button,
+#sandboxToolbar, #sandboxHint {font-family:'DM Sans',sans-serif!important;}
+#dialogTitle, .music-header h2, #sandboxToolbar h2 {font-family:'Manrope',sans-serif!important;}
+/* Dialogs are children of the positioned scene, not of the viewport. */
+#stage>#modal, #stage>#musicModal {
+  position:absolute!important;inset:0!important;left:0!important;top:0!important;
+  right:0!important;bottom:0!important;width:100%!important;height:100%!important;
+  display:grid!important;place-items:center!important;box-sizing:border-box!important;
+  padding:clamp(10px,3%,44px)!important;z-index:80!important;
+  background:rgba(25,17,12,.28)!important;
+  overflow:hidden!important;visibility:visible!important;pointer-events:auto!important;
+}
+#stage>#modal[hidden],#stage>#musicModal[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important;}
+#stage>#dialog,#stage>#musicDialog{margin:auto!important;}
+#stage #dialog,#stage #musicDialog{position:relative!important;max-height:92%!important;max-width:min(560px,94%)!important;overflow:hidden;}
+#stage #musicDialog{display:flex!important;flex-direction:column!important;}
+#stage .music-list{overflow-y:auto!important;min-height:0!important;}
+</style><style id="cafe-v32-pdf-native">
+#resumeStandalone #resumeDocument{padding:0!important;display:block!important;overflow:hidden!important;background:#fbf9f5!important}
+#resumeStandalone #resumePageHost{width:100%!important;height:100%!important;display:block!important;margin:0!important;box-shadow:none!important;background:#fbf9f5!important}
+#resumeStandalone .resume-actions [hidden]{display:none!important}
+#resumeLoadStatus[hidden]{display:none!important}
+</style>
+<style id="cafe-v34-short-music">
+/* Music only: half-height of the former game-stage modal (92% -> 46%). */
+#stage #musicDialog {
+  height:46%!important;
+  max-height:46%!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#stage #musicDialog .music-header,
+#stage #musicDialog .music-now {flex:0 0 auto!important;}
+#stage #musicDialog .music-list {
+  flex:1 1 auto!important; min-height:0!important;
+  overflow-y:auto!important; overscroll-behavior:contain;
+}
+</style>
+<style id="cafe-v36-visual-system">
+/* Slightly tinted warm-neutral navigation bars, distinct from the modal body. */
+#sandboxToolbar, #musicDialog .music-header, #dialog h2{background:#fbf9f5!important;color:#302a28!important}
+#sandboxHint,#musicDialog .music-now{background:#fbf9f5!important}
+#dialog{background:#fbf9f5!important;overflow:hidden}
+#dialog h2{margin:-20px -22px 18px!important;padding:18px 22px!important;border-bottom:1px solid #ddd5cf}
+#stage #cafeNavMenu{position:absolute;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:#160d188c;padding:7%;box-sizing:border-box;pointer-events:auto}
+#stage #cafeNavMenu[hidden]{display:none!important;pointer-events:none!important}
+#cafeNavMenu .cafe-nav-panel{font-family:'DM Sans',sans-serif;background:#fbf9f5;color:#302a28;border:1px solid #d9d1ca;border-radius:20px;width:min(440px,92%);max-height:90%;display:flex;flex-direction:column;box-shadow:0 18px 60px #180a214f;overflow:hidden}
+#cafeNavMenu .cafe-nav-header,#cafeNavMenu .cafe-nav-footer{background:#fbf9f5;padding:17px 23px;flex:0 0 auto}
+#cafeNavMenu .cafe-nav-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd5cf}
+#cafeNavMenu .cafe-nav-header h2{font-family:Manrope,sans-serif;font-size:20px;margin:0;letter-spacing:-.035em}
+#cafeNavMenu .cafe-nav-close{border:1px solid #d7ccc6;background:#fff;border-radius:9px;width:34px;height:34px;color:#332b38;cursor:pointer;font-size:22px}
+#cafeNavMenu .cafe-nav-body{padding:16px 22px;display:grid;gap:8px;overflow:auto}
+#cafeNavMenu .cafe-nav-body button,#cafeNavMenu .cafe-nav-primary{font:600 15px 'DM Sans',sans-serif;display:block;text-decoration:none;text-align:left;padding:13px 16px;border-radius:11px;border:1px solid #e4dfdc;background:#fff;color:#302a28;cursor:pointer;transition:background .12s,border-color .12s}
+#cafeNavMenu .cafe-nav-body button:hover,#cafeNavMenu .cafe-nav-body button:focus-visible{background:#f0e9fa;border-color:#8d59d0;outline:2px solid #8d59d0;outline-offset:1px}
+#cafeNavMenu .cafe-nav-primary{background:#6c35b5;color:white;text-align:center;border-color:#6c35b5;margin-top:8px}
+#cafeNavMenu .cafe-nav-primary:hover,#cafeNavMenu .cafe-nav-primary:focus-visible{background:#4e268b;outline:3px solid #bd9fea;outline-offset:1px}
+#cafeNavMenu .cafe-nav-footer{text-align:center;border-top:1px solid #ddd5cf;color:#786a7b;font:500 12px 'DM Sans',sans-serif}
+</style><style id="cafe-v37-back-visibility">#sandboxBack[hidden]{display:none!important}#sandboxBack:not([hidden]){display:inline-flex!important}</style>
+<style id="cafe-v38-consistent-modal-chrome">
+/* Resume uses the same header height, font, border and title alignment as the case-study toolbar. */
+#resumeStandalone .resume-actions{min-height:52px!important;box-sizing:border-box!important;justify-content:space-between!important;flex-wrap:nowrap!important;padding:8px 14px!important;gap:12px!important;background:#fbf9f5!important;border-bottom:1px solid #e7e0d6!important}
+#resumeStandalone .resume-actions strong{font-family:'Manrope',sans-serif!important;font-weight:700!important;font-size:clamp(14px,1.35vw,20px)!important;line-height:1.25!important;color:#29242a!important;margin-right:auto!important}
+#resumeStandalone .resume-actions #resumeExit,#sandboxToolbar #sandboxClose,#musicDialog #musicClose,#dialog #closeDialog,#cafeNavMenu .cafe-nav-close{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;font:600 13px 'DM Sans',sans-serif!important;border:1px solid #ddd7cf!important;border-radius:10px!important;background:#fffdf9!important;color:#363039!important;padding:9px 12px!important;min-height:38px!important;width:auto!important;min-width:66px!important;cursor:pointer!important;white-space:nowrap}
+#resumeStandalone .resume-actions #resumeExit:hover,#sandboxToolbar #sandboxClose:hover,#musicDialog #musicClose:hover,#dialog #closeDialog:hover,#cafeNavMenu .cafe-nav-close:hover{background:#f2eafa!important;border-color:#aa8bcf!important}
+#cafeNavMenu .cafe-nav-close .cafe-mui-icon{width:20px!important;height:20px!important;flex:0 0 20px!important}
+#resumeDownload{display:none!important}
+</style>
+<style id="cafe-v39-simplified-modal-chrome">
+/* Back and close controls share stroke, size, font weight, border and padding. */
+#sandboxToolbar #sandboxBack,#sandboxToolbar #sandboxClose{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;font-family:'DM Sans',sans-serif!important;font-size:13px!important;font-weight:600!important;line-height:1.2!important;letter-spacing:0!important;border:1px solid #ddd7cf!important;border-radius:10px!important;background:#fffdf9!important;color:#363039!important;padding:9px 12px!important;min-height:38px!important;width:auto!important;box-sizing:border-box!important}
+#sandboxToolbar #sandboxBack:hover,#sandboxToolbar #sandboxClose:hover{background:#f2eafa!important;border-color:#aa8bcf!important}
+#sandboxToolbar #sandboxBack[hidden]{display:none!important}
+#sandboxToolbar #sandboxBack .cafe-mui-icon,#sandboxToolbar #sandboxClose .cafe-mui-icon{width:20px!important;height:20px!important;flex:0 0 20px!important;stroke-width:1.8!important}
+#sandboxToolbar #sandboxTitle{display:none!important}
+#sandboxToolbar{justify-content:flex-end!important}
+#sandboxToolbar #sandboxBack:not([hidden]){margin-right:auto!important}
+#sandboxHint,#musicInstructions{display:none!important}
+/* The Quick Menu intentionally keeps its footer. All other modal bodies fill the space. */
+#portfolioSandbox .sandbox-inner{overflow:hidden!important}
+#portfolioSandbox #sandboxBody{min-height:0!important;flex:1 1 auto!important}
+</style><style id="cafe-v41-list-headers">
+#sandboxToolbar #sandboxTitle:not([hidden]){display:block!important;margin:0 auto 0 0!important;font-family:'Manrope',sans-serif!important;font-size:clamp(14px,1.35vw,20px)!important;font-weight:700!important;letter-spacing:-.02em!important;color:#29242a!important;line-height:1.25!important}
+#sandboxToolbar #sandboxTitle[hidden]{display:none!important}
+#resumeStandalone .resume-actions strong{font-weight:700!important}
+</style>
+
+<style id="arcade-v42-css">
+#stage{position:relative}
+#arcadeModal[hidden]{display:none!important}
+#arcadeModal{position:absolute;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;background:rgba(15,10,24,.58);padding:4%;box-sizing:border-box;font-family:"DM Sans",sans-serif;color:#332849}
+#arcadeDialog{background:#fbf9f5;border:1px solid #d9d0df;border-radius:17px;width:min(660px,96%);max-height:96%;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 60px #180d2f55}
+.arcadeHead{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 22px;border-bottom:1px solid #e9e3e9;background:#fbf9f5;flex:0 0 auto}
+.arcadeHead h2{font:700 21px "Manrope",sans-serif;margin:0;color:#292234}
+#arcadeClose{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid #ded6e1;border-radius:9px;padding:7px 12px;color:#473959;font:500 13px "DM Sans",sans-serif;cursor:pointer}
+#arcadeClose svg{width:20px;height:20px;stroke-width:1.9}
+#arcadeClose:hover,.arcadeBtn:hover{border-color:#9a70c3;background:#f1e9f9}
+.arcadeBody{padding:16px 22px 22px;overflow:auto;min-height:0;display:flex;flex-direction:column;gap:12px;align-items:center}
+#arcadeIntro,#arcadeFinish{width:100%;max-width:520px;text-align:center}
+#arcadeIntro h3,#arcadeFinish h3{font:700 24px "Manrope",sans-serif;margin:8px 0}
+#arcadeIntro p,#arcadeFinish p{line-height:1.6;font-size:14px;color:#675b6e}
+#arcadeIntro .arcadeInstructions{text-align:left;margin:13px auto;padding:12px 18px;background:#f3edf7;border-radius:12px;max-width:390px;font-size:13px;line-height:1.7}
+.arcadeBtn{background:#542780;color:white;border:1px solid #542780;border-radius:10px;padding:11px 22px;font:600 14px "DM Sans",sans-serif;cursor:pointer;margin-top:10px}
+.arcadeBtn:hover{background:#713ba0;color:white}
+#arcadePlay{display:flex;align-items:flex-start;justify-content:center;gap:16px;width:100%}
+#arcadeCanvas{display:block;background:#231b31;border:3px solid #67438b;border-radius:6px;image-rendering:pixelated;width:auto;max-width:70%;max-height:min(54vh,470px);aspect-ratio:1/2}
+#arcadeModal[data-kind="snake"] #arcadeCanvas{aspect-ratio:1/1;max-height:min(54vh,440px)}
+.arcadeSidebar{display:flex;flex-direction:column;gap:10px;min-width:100px;font:500 13px "DM Sans",sans-serif}
+.arcadeStat{padding:10px;background:#f0ebf5;border:1px solid #e2d8ec;border-radius:9px}
+.arcadeStat strong{display:block;font:700 22px "Manrope",sans-serif;color:#53277f;margin-top:3px;font-variant-numeric:tabular-nums}
+#arcadeNext{width:76px;height:76px;background:#231b31;border-radius:5px;image-rendering:pixelated;margin-top:7px}
+#arcadePlayHint{font-size:11px;line-height:1.6;color:#756a7c;max-width:125px}
+#arcadeFinish[hidden],#arcadeIntro[hidden],#arcadePlay[hidden]{display:none!important}
+#arcadeResult{font:700 37px "Manrope",sans-serif;color:#6b35aa;margin:10px 0}
+@media(max-height:650px){.arcadeBody{padding:8px 15px 12px;gap:5px}#arcadeCanvas{max-height:48vh}.arcadeHead{padding:8px 16px}}
+</style>
+<style id="cafe-v43-refinements">
+/* Align exit button typography with the lighter, regular-weight list and back controls. */
+#resumeStandalone .resume-actions #resumeExit,
+#sandboxToolbar #sandboxClose,
+#sandboxToolbar #sandboxBack,
+#musicDialog #musicClose,
+#dialog #closeDialog,
+#cafeNavMenu .cafe-nav-close,
+#arcadeDialog .arcade-close,
+#arcadeModal button[aria-label*="Close"]{font-family:'DM Sans',sans-serif!important;font-weight:500!important;letter-spacing:0!important}
+/* Filled MUI-style 20px icons in music controls. */
+#musicDialog .cafe-music-filled-icon{width:20px!important;height:20px!important;min-width:20px;flex:0 0 20px;fill:currentColor;stroke:none!important;vertical-align:middle;display:inline-block}
+#musicDialog .music-buttons button{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:500!important}
+#musicDialog .music-track .playglyph{display:inline-flex;align-items:center;justify-content:center;min-width:22px}
+</style><style id="arcade-v44-fixes">
+#arcadeDialog{width:min(1040px,96%)!important;height:min(780px,92%)!important;max-height:92%!important}
+#arcadeDialog>.arcadeBody{flex:1;min-height:0;overflow:auto;justify-content:center}
+#arcadeIntro,#arcadeFinish{margin:auto;max-width:620px}
+#arcadePlay{flex:1;min-height:0;align-items:center!important;justify-content:center!important;max-height:100%}
+#arcadeCanvas{box-sizing:content-box!important;display:block!important;flex:none!important;width:auto!important;height:auto!important;max-width:min(58%,380px)!important;max-height:min(100%,610px)!important;object-fit:contain!important;aspect-ratio:1/2!important}
+#arcadeModal[data-kind="snake"] #arcadeCanvas{max-width:min(65%,520px)!important;max-height:min(100%,540px)!important;aspect-ratio:1/1!important}
+.arcadeSidebar{align-self:center;min-width:120px}
+#arcadeHold{width:76px;height:76px;background:#231b31;border-radius:5px;image-rendering:pixelated;margin-top:7px}
+@media(max-width:720px){#arcadeDialog{width:98%!important;height:95%!important}.arcadeSidebar{min-width:88px}.arcadeHead{padding:10px 16px!important}}
+</style><style id="cafe-v45-arcade-sizing">
+/* Let the Tetris board occupy the full available vertical playing space. */
+#arcadeModal[data-kind="tetris"] #arcadePlay{height:100%!important;width:100%!important;min-height:0!important;gap:26px!important}
+#arcadeModal[data-kind="tetris"] #arcadeCanvas{
+ height:min(660px,calc(100% - 12px))!important;width:auto!important;
+ max-height:calc(100% - 12px)!important;max-width:calc(100% - 185px)!important;
+ aspect-ratio:1 / 2!important;object-fit:contain!important;image-rendering:pixelated;
+}
+#arcadeModal[data-kind="snake"] #arcadeCanvas{aspect-ratio:1!important;object-fit:contain!important}
+@media(max-width:650px){#arcadeModal[data-kind="tetris"] #arcadePlay{gap:9px!important}#arcadeModal[data-kind="tetris"] #arcadeCanvas{max-width:calc(100% - 105px)!important}}
+</style><style id="cafe-v46-audio-arcade-style">
+/* Compact music volume controls, adjustable from muted to full. */
+#stage .cafe-volume-control,#musicDialog .cafe-volume-control{display:flex;align-items:center;gap:11px;margin-top:2px;font:500 12px "DM Sans",sans-serif;color:#5b4c67}
+#stage .cafe-volume-control>span,#musicDialog .cafe-volume-control>span{min-width:48px}
+#cafeMusicVolume{flex:1;min-width:70px;height:5px;accent-color:#7546ac;cursor:pointer}
+#cafeMusicVolumeValue{font:500 12px "DM Sans",sans-serif;color:#625271;min-width:35px;text-align:right;font-variant-numeric:tabular-nums}
+/* The final board remains visible through a subtle low-opacity layer behind the result. */
+#arcadeFinish{position:relative;isolation:isolate;min-height:min(52vh,390px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+#arcadeFinish::before{content:"";position:absolute;inset:5px 10px;background-image:var(--arcade-final-board,none);background-repeat:no-repeat;background-position:center;background-size:contain;opacity:.20;pointer-events:none;z-index:-1;image-rendering:pixelated}
+#arcadeFinish>*,#arcadeFinish button{position:relative;z-index:1}
+</style>
+<style id="cafe-v47-centered-arcade">
+/* Stable three-column layout: identical flexible left/right rails keep game canvas centered. */
+#arcadeDialog{width:min(1120px,97%)!important;height:min(820px,94%)!important;max-height:94%!important}
+#arcadeDialog>.arcadeBody{position:relative;flex:1 1 auto!important;min-height:0!important;box-sizing:border-box;overflow:hidden!important;padding:16px 24px 20px!important;justify-content:center!important;align-items:stretch!important}
+#arcadePlay{position:relative;display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;align-items:center!important;justify-content:stretch!important;column-gap:18px!important;flex:1 1 auto!important;height:100%!important;width:100%!important;min-height:0!important;max-height:100%!important;margin:0!important}
+#arcadeCanvas{grid-column:2;grid-row:1;place-self:center!important;box-sizing:border-box!important;display:block!important;flex:none!important;min-width:0!important;min-height:0!important;width:auto!important;height:min(660px,calc(100% - 12px))!important;max-width:min(100%,370px)!important;max-height:calc(100% - 12px)!important;aspect-ratio:1 / 2!important;object-fit:contain!important;image-rendering:pixelated}
+#arcadeModal[data-kind="snake"] #arcadeCanvas{height:min(550px,calc(100% - 12px))!important;max-width:min(100%,550px)!important;max-height:calc(100% - 12px)!important;aspect-ratio:1 / 1!important}
+#arcadeModal[data-kind="tetris"] #arcadeCanvas{height:min(660px,calc(100% - 12px))!important;width:auto!important;max-width:min(100%,370px)!important}
+#arcadePlay .arcadeSidebar{grid-column:3;grid-row:1;justify-self:start;align-self:center!important;box-sizing:border-box;width:min(208px,100%);min-width:0!important;max-width:100%;gap:12px!important}
+#arcadePlay .arcadeStat{padding:13px 15px!important;border-radius:12px!important;font-size:14px!important}
+#arcadePlay .arcadeStat strong{font-size:27px!important;margin-top:5px!important}
+#arcadePlay #arcadePlayHint{font-size:12px!important;max-width:190px!important;line-height:1.55!important}
+#arcadeIntro{max-width:720px!important;width:min(100%,720px)!important;margin:auto!important}
+#arcadeIntro h3{font-size:28px!important}
+#arcadeIntro .arcadeInstructions{max-width:540px!important;padding:18px 24px!important;font-size:15px!important;line-height:1.85!important}
+/* Results are superimposed over a dimmed *live canvas*, never a resized snapshot. */
+#arcadeFinish{position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;box-sizing:border-box!important;z-index:3!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important;pointer-events:none!important}
+#arcadeFinish[hidden]{display:none!important}
+#arcadeFinish::before{display:none!important;content:none!important}
+#arcadeModal[data-phase="finish"] #arcadeCanvas{opacity:.20!important;transition:opacity .3s ease}
+#arcadeModal[data-phase="finish"] .arcadeSidebar{opacity:.25!important;transition:opacity .3s ease}
+.arcadeFinishCard{padding:24px 34px 28px;box-sizing:border-box;max-width:410px;min-width:min(90%,310px);border-radius:16px;text-align:center;background:rgba(251,249,245,.94);border:1px solid #e6dbea;box-shadow:0 12px 35px #24133716;pointer-events:auto}
+#arcadeFinish h3{font-size:27px!important}
+#arcadeFinish #arcadeResult{font-size:43px!important}
+@media(max-width:750px){
+ #arcadeDialog>.arcadeBody{padding:9px 10px!important}
+ #arcadePlay{column-gap:8px!important}
+ #arcadePlay .arcadeSidebar{width:100%!important;gap:6px!important}
+ #arcadePlay .arcadeStat{padding:7px!important;font-size:11px!important}
+ #arcadePlay .arcadeStat strong{font-size:16px!important}
+ #arcadePlay #arcadePlayHint{font-size:10px!important}
+ #arcadeModal[data-kind="tetris"] #arcadeCanvas{height:min(600px,calc(100% - 8px))!important;max-width:calc(100vw - 120px)!important}
+ #arcadeModal[data-kind="snake"] #arcadeCanvas{height:min(430px,calc(100% - 8px))!important;max-width:calc(100vw - 120px)!important}
+ .arcadeFinishCard{padding:20px 15px;min-width:0;width:min(90%,340px)}
+}
+</style>
+<style id="cafe-v50-maria-review-style">
+ #cafeReviewPortrait{width:68px;height:68px;}
+ #cafeReviewName{font-weight:600;}
+ #cafeReviewText{font-size:15px;line-height:1.52;}
+ #cafeReviewMeta{line-height:1.45;max-width:490px;}
+</style>
+<style id="cafe-v51-refinements">
+ #cafeReviewLinkedIn{border-color:#c9b9a5!important;background:#f7f3ec!important;color:#614b3b!important;font-weight:500!important;box-shadow:none!important}
+ #cafeReviewLinkedIn:hover,#cafeReviewLinkedIn:focus-visible{background:#ece2d5!important;border-color:#b69a7d!important;outline-color:#ad9479!important}
+ #cafeAmberChat[hidden]{display:none!important}
+ #cafeAmberChat{position:fixed;inset:0;z-index:100008;background:rgba(22,16,31,.60);display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;font-family:'DM Sans',Arial,sans-serif;color:#352e31}
+ #cafeAmberChatDialog{width:min(940px,95vw);height:min(720px,91vh);max-height:91vh;background:#fffefa;border:1px solid #e9e2d8;box-shadow:0 25px 78px #23142755;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+ .amber-chat-header{padding:12px 21px;min-height:67px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #eae5df;background:#fbf9f5;flex-shrink:0}
+ .amber-chat-head-person{display:flex;align-items:center;gap:11px;min-width:0}
+ .amber-chat-head-person img{height:43px;width:43px;border-radius:50%;object-fit:cover;border:1px solid #e3d8ed}
+ .amber-chat-head-person strong{display:block;font-weight:600;font-size:16px}
+ .amber-chat-head-person small{font-size:12px;color:#857a77}
+ #amberChatClose{display:flex;align-items:center;gap:8px;border:1px solid #dbd5ce;background:#fffefa;color:#463d3a;border-radius:8px;padding:9px 12px;font:500 13px 'DM Sans',Arial,sans-serif;cursor:pointer}
+ #amberChatClose svg{height:18px;width:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+ .amber-chat-scroll{flex:1;min-height:0;overflow-y:auto;padding:27px clamp(16px,4vw,45px) 20px;overscroll-behavior:contain}
+ .amber-chat-intro{margin:0 0 24px;text-align:center}
+ .amber-chat-intro img{width:68px;height:68px;border-radius:50%;object-fit:cover;margin:0 auto 10px}
+ .amber-chat-intro h3{font-size:21px;line-height:1.3;font-weight:600;margin:0 0 7px}
+ .amber-chat-intro p{font-size:14px;line-height:1.55;color:#776e6b;margin:0 auto;max-width:500px}
+ .amber-chat-suggestions{display:flex;flex-wrap:nowrap;gap:8px;justify-content:center;margin:17px auto 20px;max-width:850px;width:100%}
+ .amber-chat-suggestions button{border:1px solid #dccfc0;border-radius:999px;padding:11px 14px;background:#f8f4ef;color:#624d40;font:500 12px/1.3 'DM Sans',Arial,sans-serif;text-align:center;cursor:pointer;flex:1 1 0;min-width:0;white-space:normal;transition:background .16s,border-color .16s}
+ .amber-chat-suggestions button:hover,.amber-chat-suggestions button:focus-visible{background:#ebe2d7;border-color:#b8a088;outline:2px solid #b8a088;outline-offset:1px}
+ @media(max-width:680px){.amber-chat-suggestions{flex-wrap:wrap}.amber-chat-suggestions button{flex:1 1 100%;font-size:13px}}
+ .amber-chat-thread{display:flex;flex-direction:column;gap:17px;max-width:790px;margin:auto}
+ .amber-chat-msg{display:flex;align-items:flex-start;gap:10px;max-width:93%}
+ .amber-chat-msg.user{align-self:flex-end;flex-direction:row-reverse}
+ .amber-chat-msg img{width:29px;height:29px;object-fit:cover;border-radius:50%;flex-shrink:0}
+ .amber-chat-bubble{white-space:pre-wrap;font-size:14px;line-height:1.64;background:#f3ede6;border-radius:12px;padding:12px 15px;max-width:690px}
+ .amber-chat-msg.user .amber-chat-bubble{background:#ece5f6}
+ .amber-chat-name{color:#817570;font-size:11px;font-weight:600;margin:0 0 4px}
+ .amber-chat-bottom{background:#fbf9f5;border-top:1px solid #eae5df;padding:13px clamp(16px,4vw,42px) 14px;flex-shrink:0}
+ #amberChatForm{display:flex;gap:8px;align-items:flex-end}
+ #amberChatInput{flex:1;min-width:0;resize:none;font:400 14px 'DM Sans',Arial,sans-serif;border:1px solid #d8cfc4;border-radius:9px;padding:12px 14px;max-height:96px;min-height:20px;color:#352e31;background:white;outline:none}
+ #amberChatInput:focus{border-color:#9e886f;box-shadow:0 0 0 2px #b9a69133}
+ #amberChatSend{border:none;border-radius:9px;background:#67513e;color:white;padding:11px 18px;min-height:43px;font:500 14px 'DM Sans',Arial,sans-serif;cursor:pointer}
+ #amberChatSend:hover{background:#513c2e}
+ .amber-chat-note{font-size:11px;color:#928983;margin-top:8px;line-height:1.45}
+ @media(max-width:650px){#cafeAmberChat{padding:7px}#cafeAmberChatDialog{height:96vh;max-height:96vh;width:100%}.amber-chat-scroll{padding:20px 14px}.amber-chat-header{padding:10px 13px}.amber-chat-bubble{font-size:13px}.amber-chat-bottom{padding:11px 12px}}
+</style><style id="cafe-v58-chat-polish">
+/* Stage-mounted interactions align to the game frame, not the full browser window. */
+#cafeAmberChat{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:clamp(10px,2vw,24px)!important;box-sizing:border-box!important}
+#cafeAmberChatDialog{max-width:calc(100% - 10px);max-height:calc(100% - 10px)}
+#cafeReviewModal{position:absolute!important;inset:0!important}
+.amber-chat-msg.amber{padding-left:0!important}
+#amberChatSend{background:#fff!important;color:#46392f!important;border:1px solid #d5cbc1!important;box-shadow:none!important;transition:border-color .15s ease,box-shadow .15s ease!important}
+#amberChatSend:not(:disabled):hover,#amberChatSend:focus-visible{border-color:#9a6ac6!important;box-shadow:0 0 0 1px #9a6ac6!important;outline:none!important}
+#amberChatSend:disabled{opacity:.55!important}
+@media(max-width:650px){#cafeAmberChat{padding:7px!important}}
+</style><style id="cafe-v59-persistent-question-chips">
+#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions{display:flex!important;flex-wrap:nowrap!important;gap:8px!important;max-width:none!important;margin:0 0 10px!important;width:100%!important;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 1px 3px;justify-content:flex-start!important}
+#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions button{box-sizing:border-box!important;min-height:43px!important;height:43px!important;flex:1 0 max-content!important;max-width:none!important;border:1px solid #d5cbc1!important;background:#fff!important;color:#46392f!important;border-radius:9px!important;padding:0 13px!important;font:500 12px/1.25 'DM Sans',Arial,sans-serif!important;white-space:nowrap!important;box-shadow:none!important;outline:none!important;transition:border-color .15s ease,box-shadow .15s ease!important}
+#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions button:hover,#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions button:focus-visible{border-color:#9a6ac6!important;box-shadow:0 0 0 1px #9a6ac6!important;outline:none!important;background:#fff!important}
+#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions button:disabled{opacity:.5!important;cursor:wait!important}
+@media(max-width:680px){#cafeAmberChat .amber-chat-bottom .amber-chat-suggestions button{flex:0 0 auto!important}}
+</style><style id="cafe-v60-welcome-chips">
+/* The first Amber message is part of the ordinary chat history. */
+#cafeAmberChat #amberChatIntro{display:none!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;gap:8px!important;margin:18px auto 12px!important;padding:2px 8px 4px!important;width:100%!important;max-width:810px!important;overflow:visible!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions button{box-sizing:border-box!important;flex:0 1 auto!important;min-height:43px!important;height:auto!important;min-width:0!important;max-width:100%!important;border:1px solid #d5cbc1!important;background:#fff!important;color:#46392f!important;border-radius:9px!important;padding:11px 14px!important;font:500 12px/1.4 'DM Sans',Arial,sans-serif!important;white-space:normal!important;text-align:center!important;box-shadow:none!important;outline:none!important;cursor:pointer!important;transition:border-color .15s ease,box-shadow .15s ease!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions button:hover,#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions button:focus-visible{border-color:#9a6ac6!important;box-shadow:0 0 0 1px #9a6ac6!important;outline:none!important;background:#fff!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions button:disabled{opacity:.55!important;cursor:wait!important}
+#cafeAmberChat .amber-chat-thread .amber-chat-msg:first-child .amber-chat-bubble{white-space:pre-line!important}
+@media(max-width:650px){#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions{gap:7px!important}}
+</style><style id="cafe-v61-chat-polish-navigation">
+/* Both chat controls occupy the same box height and share the same focus treatment. */
+#cafeAmberChat #amberChatForm{display:flex!important;align-items:stretch!important;gap:8px!important}
+#cafeAmberChat #amberChatInput,#cafeAmberChat #amberChatSend{box-sizing:border-box!important;height:43px!important;min-height:43px!important;max-height:43px!important;margin:0!important}
+#cafeAmberChat #amberChatInput{flex:1 1 auto!important;min-width:0!important;padding:0 14px!important;line-height:41px!important;resize:none!important;overflow-y:hidden!important;border:1px solid #d5cbc1!important;background:#fff!important;outline:none!important;box-shadow:none!important;transition:border-color .15s ease,box-shadow .15s ease!important}
+#cafeAmberChat #amberChatInput:hover,#cafeAmberChat #amberChatInput:focus,#cafeAmberChat #amberChatInput:focus-visible{border-color:#9a6ac6!important;box-shadow:0 0 0 1px #9a6ac6!important;outline:none!important}
+#cafeAmberChat #amberChatSend{flex:0 0 auto!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0 18px!important}
+/* The welcome remains a real message (in chat history and model context), but looks like the original centered intro. */
+#cafeAmberChat .amber-chat-thread>.amber-chat-welcome{display:flex!important;justify-content:center!important;align-self:stretch!important;max-width:100%!important;width:100%!important;margin:0 auto!important;text-align:center!important}
+#cafeAmberChat .amber-chat-welcome>div{width:100%!important;max-width:700px!important;margin:0 auto!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-name{display:none!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble{box-sizing:border-box!important;background:transparent!important;color:#352e31!important;border:0!important;box-shadow:none!important;max-width:none!important;width:100%!important;padding:22px 12px 6px!important;text-align:center!important;white-space:normal!important;font:400 14px/1.65 'DM Sans',Arial,sans-serif!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble h3{font:700 clamp(23px,2.9vw,31px)/1.22 'Manrope','DM Sans',Arial,sans-serif!important;letter-spacing:-.025em!important;color:#352e31!important;margin:0 auto 17px!important;text-align:center!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble p{font:400 14px/1.65 'DM Sans',Arial,sans-serif!important;color:#6b6061!important;max-width:560px!important;margin:0 auto 13px!important;text-align:center!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions{justify-content:center!important;margin:10px auto 18px!important}
+/* Shared purple outline for all café modal close/ESC and navigation controls. */
+:where(#amberChatClose,#sandboxClose,#sandboxBack,#resumeExit,#resumeZoomOut,#resumeZoomIn,#resumeFitWidth,#resumeFitHeight,#musicClose,#arcadeClose,#cafeReviewClose,#closeDialog,.cafe-nav-close,#cafeNavMenu button,#arcadeReplay,#arcadeStart,#cafeReviewLinkedIn):hover,
+:where(#amberChatClose,#sandboxClose,#sandboxBack,#resumeExit,#resumeZoomOut,#resumeZoomIn,#resumeFitWidth,#resumeFitHeight,#musicClose,#arcadeClose,#cafeReviewClose,#closeDialog,.cafe-nav-close,#cafeNavMenu button,#arcadeReplay,#arcadeStart,#cafeReviewLinkedIn):focus-visible{
+ border-color:#9a6ac6!important;outline:2px solid #9a6ac6!important;outline-offset:1px!important;box-shadow:0 0 0 1px #9a6ac655!important;
+}
+/* Cover navigation elements inside non-chat portfolio and player modals as well. */
+#sandboxToolbar button:hover,#sandboxToolbar button:focus-visible,#resumeStandalone .resume-actions button:hover,#resumeStandalone .resume-actions button:focus-visible,
+#musicDialog button:hover,#musicDialog button:focus-visible,#arcadeDialog button:hover,#arcadeDialog button:focus-visible,
+#dialog button:hover,#dialog button:focus-visible,#cafeReviewDialog button:hover,#cafeReviewDialog button:focus-visible{
+ border-color:#9a6ac6!important;outline:2px solid #9a6ac6!important;outline-offset:1px!important;
+}
+</style><style id="cafe-v62-welcome-autogrow">
+/* Centered first-message welcome exactly like the earlier introduction. */
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble{padding:19px 10px 3px!important;text-align:center!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-welcome-photo{display:block!important;width:136px!important;height:136px!important;object-fit:cover!important;border-radius:50%!important;margin:0 auto 31px!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble h3{font-size:clamp(27px,3.4vw,39px)!important;line-height:1.2!important;font-weight:700!important;margin:0 auto 20px!important;letter-spacing:-.035em!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble p{font-size:clamp(15px,1.7vw,19px)!important;line-height:1.6!important;max-width:730px!important;margin:0 auto 14px!important;text-align:center!important}
+#cafeAmberChat .amber-chat-thread>.amber-chat-suggestions{margin:20px auto 16px!important;justify-content:center!important}
+/* Keep Send fixed at 43px while the message input grows up to half the dialog. */
+#cafeAmberChat #amberChatForm{align-items:flex-end!important}
+#cafeAmberChat #amberChatInput{height:43px!important;min-height:43px!important;max-height:50vh!important;line-height:1.45!important;padding:10px 14px!important;overflow-y:hidden!important;overflow-x:hidden!important;resize:none!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;align-self:flex-end!important}
+#cafeAmberChat #amberChatSend{height:43px!important;min-height:43px!important;max-height:43px!important;align-self:flex-end!important}
+@media(max-width:650px){#cafeAmberChat .amber-chat-welcome .amber-chat-welcome-photo{width:100px!important;height:100px!important;margin-bottom:22px!important}#cafeAmberChat .amber-chat-welcome .amber-chat-bubble p{font-size:15px!important}}
+</style><style id="cafe-v63-chat-composer">
+/* Chat messages: visitors use warm neutral brown; Amber uses soft lavender. */
+#cafeAmberChat .amber-chat-msg.user .amber-chat-bubble{background:#f3ede6!important;color:#352e31!important}
+#cafeAmberChat .amber-chat-msg.amber:not(.amber-chat-welcome) .amber-chat-bubble{background:#ece5f6!important;color:#352e31!important}
+/* The welcome remains the special centered, borderless first message. */
+#cafeAmberChat .amber-chat-msg.amber.amber-chat-welcome .amber-chat-bubble{background:transparent!important}
+/* Unified auto-expanding composer, with button anchored inside its border. */
+#cafeAmberChat #amberChatForm{position:relative!important;display:block!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:0!important;isolation:isolate}
+#cafeAmberChat #amberChatInput{display:block!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;height:52px!important;min-height:52px!important;max-height:50vh!important;margin:0!important;border:1px solid #d5cbc1!important;border-radius:12px!important;padding:15px 91px 15px 15px!important;font:400 14px/1.5 'DM Sans',Arial,sans-serif!important;overflow-x:hidden!important;overflow-wrap:anywhere!important;white-space:pre-wrap!important;resize:none!important;background:#fff!important;color:#352e31!important;outline:none!important;transition:border-color .15s ease,box-shadow .15s ease!important}
+#cafeAmberChat #amberChatInput:hover,#cafeAmberChat #amberChatInput:focus-visible,#cafeAmberChat #amberChatInput:focus{border-color:#9a6ac6!important;box-shadow:0 0 0 1px #9a6ac6!important;outline:none!important}
+#cafeAmberChat #amberChatSend{position:absolute!important;right:8px!important;bottom:8px!important;z-index:2!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:64px!important;height:36px!important;min-height:36px!important;max-height:36px!important;margin:0!important;padding:0 12px!important;border-radius:8px!important;align-self:auto!important;white-space:nowrap!important}
+#cafeAmberChat #amberChatInput:disabled{opacity:.7!important}
+@media(max-width:650px){#cafeAmberChat #amberChatInput{padding-right:84px!important}}
+</style><style id="cafe-v64-welcome-size">
+/* Slightly reduce the scale of the centered intro, retaining the portrait and layout. */
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble h3{font-size:clamp(25px,2.75vw,32px)!important;line-height:1.25!important;margin-bottom:13px!important}
+#cafeAmberChat .amber-chat-welcome .amber-chat-bubble p{font-size:clamp(14px,1.36vw,16px)!important;line-height:1.55!important;max-width:640px!important}
+@media(max-width:650px){#cafeAmberChat .amber-chat-welcome .amber-chat-bubble h3{font-size:25px!important}#cafeAmberChat .amber-chat-welcome .amber-chat-bubble p{font-size:14px!important}}
+</style>
+
+<style id="cafe-v66-arcade-experience">
+/* Clear, game-specific presentation, no modifications to game canvas placement. */
+#arcadeIntro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;max-width:720px!important;text-align:center;min-height:100%;box-sizing:border-box;padding:24px 16px!important}
+#arcadeIntro[hidden]{display:none!important}
+#arcadeIntro:before{content:"";display:block;width:55px;height:55px;border-radius:16px;background:linear-gradient(140deg,#e6d5fa,#f6eee5);border:1px solid #d7c1ea;box-shadow:0 6px 0 #bfa6d6;flex:0 0 auto}
+#arcadeModal[data-kind="snake"] #arcadeIntro:before{background:repeating-linear-gradient(45deg,#bdeacb 0 9px,#e2f3e5 9px 18px);box-shadow:0 6px 0 #a6c8aa;border-color:#96bfa1}
+#arcadeIntro .arcade-eyebrow{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#8b708d;font-weight:800;margin-top:5px}
+#arcadeIntroTitle{font-family:Manrope,sans-serif!important;font-size:clamp(30px,3.8vw,43px)!important;letter-spacing:-.035em;line-height:1.12!important;margin:0!important;color:#302536}
+#arcadeIntroText{font-size:15px!important;max-width:500px;line-height:1.6!important;margin:0!important;color:#6c626b}
+#arcadeIntro .arcadeInstructions{width:min(100%,500px)!important;max-width:500px!important;box-sizing:border-box;text-align:left!important;background:#fff!important;border:1px solid #e9dfe9!important;border-radius:16px!important;padding:18px 22px!important;font-size:13px!important;line-height:1.9!important;box-shadow:0 8px 24px #37233c0b}
+#arcadeIntro .arcadeInstructions b{display:block;margin-bottom:5px;font:750 13px Manrope,sans-serif!important;color:#47334e}
+#arcadeIntro .arcadeInstructions .arcade-key{font:700 12px 'DM Sans',sans-serif;color:#5b3f71;background:#f4edf7;border:1px solid #e3d8e8;padding:3px 7px;border-radius:5px;display:inline-block;min-width:24px;text-align:center}
+#arcadeIntro .arcadeBtn{margin-top:7px!important;min-width:192px;padding:14px 26px!important;border-radius:11px!important;box-shadow:0 4px 0 #3d1d5e;transition:transform .12s,box-shadow .12s,background .12s}
+#arcadeIntro .arcadeBtn:hover{transform:translateY(-1px);box-shadow:0 5px 0 #3d1d5e}
+#arcadeModal .arcadeFinishCard{background:rgba(253,251,249,.96)!important;border:1px solid #e8dce8!important;border-radius:19px!important;box-shadow:0 16px 48px #25162830!important;padding:26px 29px 30px!important;max-width:430px!important;backdrop-filter:blur(6px)}
+#arcadeFinish .arcade-result-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8e708e;margin-bottom:8px}
+#arcadeFinish h3{font:800 clamp(25px,3.2vw,34px) Manrope,sans-serif!important;line-height:1.16!important;margin:0 0 9px!important;color:#2f2634}
+#arcadeFinishDescription{font-size:13px!important;line-height:1.65;color:#786c79!important;margin:0!important}
+#arcadeFinish #arcadeResult{font:800 clamp(34px,5vw,48px) Manrope,sans-serif!important;color:#563178!important;background:#f2eaf7;border:1px solid #e7d9ef;padding:13px 16px;border-radius:12px;margin:17px auto 10px!important;width:fit-content;max-width:100%;box-sizing:border-box}
+#arcadeFinish .arcadeBtn{background:#faf8f5!important;color:#55376e!important;border:1px solid #d3c1df!important;padding:12px 24px!important;margin-top:11px!important;border-radius:10px!important}
+#arcadeFinish .arcadeBtn:hover,#arcadeFinish .arcadeBtn:focus-visible{border-color:#9366bf!important;outline:2px solid #9366bf!important;outline-offset:2px!important;background:#f8f2fc!important}
+@media(max-height:680px){#arcadeIntro{gap:8px;padding:10px!important}#arcadeIntro:before{width:32px;height:32px}#arcadeIntroTitle{font-size:27px!important}#arcadeIntro .arcadeInstructions{padding:10px 15px!important;line-height:1.5!important}}
+@media(max-width:650px){#arcadeIntro{padding:10px 6px!important;gap:9px}#arcadeIntro .arcadeInstructions{font-size:12px!important;padding:12px 14px!important}#arcadeModal .arcadeFinishCard{padding:20px 17px!important}}
+</style>
+
+<style id="cafe-v67-arcade-cleanup">
+/* More direct arcade introduction: no decorative placeholder or redundant arcade taglines. */
+#arcadeIntro::before,#arcadeIntro:before{display:none!important;content:none!important}
+#arcadeIntro{gap:16px!important}
+#arcadeIntro .arcadeInstructions{display:flex!important;flex-direction:column;gap:12px;line-height:1.45!important;padding:21px 24px!important}
+#arcadeIntro .arcade-instruction-row{display:flex;align-items:center;justify-content:space-between;gap:16px;text-align:left}
+#arcadeIntro .arcade-instruction-keys{display:flex;gap:4px;flex-shrink:0;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+#arcadeIntro .arcade-instruction-row>span:first-child{flex:1;min-width:0}
+#arcadeIntro .arcadeInstructions kbd{font:700 13px 'DM Sans',sans-serif;min-width:25px;box-sizing:border-box;padding:4px 7px;text-align:center;border:1px solid #dfd7e2;background:#f6f1f7;color:#56415c;border-radius:6px;box-shadow:0 2px 0 #ddd1df;white-space:nowrap}
+#arcadeModal[data-kind="snake"] #arcadeIntro .arcadeInstructions kbd{background:#f0f6ee;border-color:#d1e1d1;box-shadow:0 2px 0 #c7d8c7}
+@media(max-width:520px){#arcadeIntro .arcadeInstructions{gap:11px;padding:14px!important}#arcadeIntro .arcade-instruction-row{gap:8px;font-size:12px}#arcadeIntro .arcadeInstructions kbd{font-size:11px;padding:4px 5px}}
+</style>
+<style id="cafe-v68-unicode-arcade-keys">
+/* V68: Unicode text keys for both arcade games */
+.arcade-instruction-keys{display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
+.arcade-key-separator{font-size:11px;color:#736a76;padding:0 4px;white-space:nowrap}
+@media(max-width:620px){.arcade-instruction-row{align-items:flex-start;gap:8px}.arcade-instruction-keys{max-width:68%}}
+</style>
+<style id="cafe-v72-neutral-arcade-keycaps">
+/* Neutral white key labels, consistent in Tetris and Snake. */
+#arcadeIntro .arcadeInstructions kbd,
+#arcadeModal[data-kind="snake"] #arcadeIntro .arcadeInstructions kbd {
+ background:#fff; color:#232024; border-color:#d9d6d3; box-shadow:0 2px 0 #ece8e4;
+}
+</style>
+</head><body><div id="app"><main id="stage"><canvas id="game" width="1874" height="1398" tabindex="0" aria-label="Café level editor and playable game"></canvas><div class="hint" id="stageHint">Click Test to walk around; use WASD / arrow keys</div></main>
+<aside id="sidebar" aria-label="Café level editor"><header><h1>☕ Café Level Editor <span class="pill">v5</span></h1><div class="muted">24 approved furniture positions preserved</div></header>
+<div class="tabs"><button id="furnitureTab" data-mode="furniture">Furniture</button><button id="collisionTab" data-mode="collision">Collisions</button><button id="interactionTab" data-mode="interaction">Interactions</button><button id="characterTab" data-mode="character">Characters</button></div>
+<div class="controls"><button id="testButton">▶ Test mode</button><button id="undoButton">↶ Undo</button><button id="redoButton">↷ Redo</button></div>
+<div id="status" aria-live="polite">Preparing editor…</div>
+<section id="editOptions"></section>
+<footer><div class="controls"><button id="saveButton" type="button" title="Save your latest edits in this browser">💾 Save</button><button id="exportButton">Download level JSON</button><button id="importButton">Import JSON</button><button id="screenshotButton">Save screenshot</button></div><input type="file" id="fileInput" accept="application/json,.json"><div class="muted">Coordinates use the original 1874 × 1398 room canvas. Export your level JSON and upload it in ChatGPT to continue editing later.</div><div id="saveInfo" role="status" aria-live="polite" class="muted">Not saved in this browser yet. Click Save to remember this layout.</div></footer>
+</aside></div>
+<div id="modal" hidden><div id="dialog" role="dialog" aria-modal="true"><h2 id="dialogTitle"></h2><p id="dialogBody"></p><button id="closeDialog">✕ ESC</button></div></div>
+<div id="musicModal" hidden>
+ <section id="musicDialog" role="dialog" aria-modal="true" aria-label="Music" tabindex="-1">
+  <div class="music-header"><h2>Music</h2><button type="button" id="musicClose" aria-label="Close music library">×</button></div>
+  <div class="music-now" aria-live="off"><div id="musicNowPlaying" role="status" aria-live="polite">Choose a song to start the music.</div>
+   <div class="music-buttons"><button type="button" id="musicPlayPause" aria-label="Play or pause music">▶ Play</button><button type="button" id="musicNext" aria-label="Play another random song">⤨ Random</button><span id="musicProgress">—</span></div>
+   <label class="cafe-volume-control" for="cafeMusicVolume"><span>Volume</span><input id="cafeMusicVolume" type="range" min="0" max="100" step="1" value="15" aria-label="Music volume"/><output id="cafeMusicVolumeValue" for="cafeMusicVolume">15%</output></label>
+  </div>
+  <div id="musicList" class="music-list" aria-label="Songs in alphabetical order"></div>
+  
+ </section>
+</div>
+<audio id="cafeMusicAudio" preload="none"></audio>
+<script id="cafe-v33-mui-icons">
+window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 5M4 20l7-7M14 11l7-7M4 4l5 5M14 14l7 7m-5 0h5v-5\"/>","close":"<path d=\"M18 6 6 18M6 6l12 12\"/>","back":"<path d=\"m15 18-6-6 6-6M9 12h11\"/>","download":"<path d=\"M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4\"/>","play":"<path d=\"m9 5 10 7-10 7z\"/>","pause":"<path d=\"M9 5v14M15 5v14\"/>","next":"<path d=\"m5 5 10 7-10 7zM19 5v14\"/>","music":"<path d=\"M9 18V5l12-2v13M9 18a3 2 0 1 1-6 0 3 2 0 0 1 6 0Zm12-2a3 2 0 1 1-6 0 3 2 0 0 1 6 0Z\"/>","zoomIn":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5M10.5 7.5v6m-3-3h6\"/>","zoomOut":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5M7.5 10.5h6\"/>","expand":"<path d=\"M4 9V4h5m6 0h5v5m0 6v5h-5M9 20H4v-5\"/>","undo":"<path d=\"M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2\"/>","redo":"<path d=\"m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2\"/>","save":"<path d=\"M5 3h12l4 4v14H3V3h2Zm2 0v7h10V3M7 21v-8h10v8\"/>","upload":"<path d=\"M12 17V4m0 0-5 5m5-5 5 5M4 17v4h16v-4\"/>","photo":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m4 17 5-5 3 3 3-4 5 6\"/>"};return `<svg class="cafe-mui-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.close}</svg>`};
+</script>
+<script src="assets/cafe-engine-assets.js"></script><script src="assets/cafe-engine-main.js"></script><div id="sandboxBadge">TEST VERSION · PORTFOLIO SANDBOX</div>
+<div id="portfolioSandbox" role="dialog" aria-modal="true" aria-label="Portfolio content" aria-hidden="true">
+  <div class="sandbox-inner">
+    <div id="sandboxToolbar"><button id="sandboxBack" type="button" hidden>← Back to projects</button><h2 id="sandboxTitle" hidden>Portfolio</h2><button id="sandboxClose" type="button" aria-label="Close portfolio modal">✕ ESC</button></div>
+    <div id="sandboxBody">
+      <iframe id="sandboxList" title="Portfolio project cards" tabindex="0"></iframe>
+      <iframe id="sandboxFrame" title="Portfolio content" loading="eager"></iframe>
+      <div id="resumeStandalone" hidden>
+        <div class="resume-actions" role="toolbar" aria-label="Resume PDF controls">
+          <strong>Resume</strong>
+          <button id="resumeZoomOut" type="button" aria-label="Zoom out">−</button>
+          <output id="resumeZoomLabel" aria-live="polite">100%</output>
+          <button id="resumeZoomIn" type="button" aria-label="Zoom in">+</button>
+          <button id="resumeFitWidth" type="button">Fit width</button>
+          <button id="resumeFitHeight" type="button">Fit height</button>
+          <button id="resumeExit" type="button" aria-label="Close resume">✕ ESC</button>
+        </div>
+        <div id="resumeDocument" tabindex="0" aria-label="Scrollable resume PDF"><div id="resumePageHost"></div></div>
+        <span id="resumeLoadStatus" role="status">Loading resume PDF…</span>
+      </div>
+    </div>
+
+  </div>
+  <canvas id="sandboxFrameBorder" width="1874" height="1398" aria-hidden="true"></canvas>
+</div><script id="cafe-v30-stage-overlay-mount">
+(function(){
+  const stage=document.getElementById('stage');
+  for (const id of ['modal','musicModal']) {
+    const el=document.getElementById(id);
+    if(stage&&el&&el.parentElement!==stage)stage.appendChild(el);
+  }
+})();
+</script><script id="cafe-sandbox-script">
+(()=>{
+ const projects=[{"company": "HealthSherpa", "title": "A new homepage for health marketplace agents", "summary": "80%+ agent base engagement during the Special Enrollment Period", "image": "healthsherpa-agent-home-final.png", "url": "healthsherpa/1/", "featured": true}, {"company": "HealthSherpa", "title": "Streamline client renewals for the 2026 enrollment year", "summary": "Simplifying renewals for agents and their clients", "image": "hs-renewals-18.png", "url": "healthsherpa/2/", "featured": false}, {"company": "Calendly", "title": "Driving adoption of admin scheduling templates", "summary": "Driving adoption of admin-managed scheduling templates", "image": "calendly-case-study-hero.png", "url": "calendly/1/", "featured": true}, {"company": "Calendly", "title": "Improving activation for new Calendly users", "summary": "Improving activation through a clearer onboarding experience", "image": "calendly-nu-01.png", "url": "calendly/2/", "featured": true}, {"company": "Calendly", "title": "Pricing, paywalls, and personalized plans", "summary": "Improving paid conversion across pricing, checkout and paywalls", "image": "calendly-mon-hero.svg", "url": "calendly/3/", "featured": false}, {"company": "UKG", "title": "Making employee feedback actionable on mobile", "summary": "Making feedback easier to navigate for a mobile workforce", "image": "ukg-mobile-hero.svg", "url": "ukg/1/", "featured": false}];
+ const $s=id=>document.getElementById(id);
+ const modal=$s('portfolioSandbox'),list=$s('sandboxList'),frame=$s('sandboxFrame');
+ let listKind=null,child=null,oldFocus=null,lastScroll=0;
+ const htmlEscape=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ function layout(){const stage=document.getElementById('stage'),canvas=document.getElementById('game');const r=(canvas||stage).getBoundingClientRect();
+ // Cover the arena, not the editor sidebar or surrounding black letterbox.
+ modal.style.left=Math.round(r.left)+'px';modal.style.top=Math.round(r.top)+'px';modal.style.width=Math.round(r.width)+'px';modal.style.height=Math.round(r.height)+'px';}
+ function listMarkup(kind){const data=kind==='selected'?projects.filter(p=>p.featured):projects;
+ return '<div class="sandbox-intro"><h1>'+ (kind==='selected'?'Selected Works':'All Projects') + '</h1><p>Explore case studies from Amber’s portfolio.</p></div>'+data.map((p,i)=>
+ '<button class="sandbox-card" type="button" data-project="'+projects.indexOf(p)+'" aria-label="Open case study: '+htmlEscape(p.title)+'"><span class="sandbox-card-copy"><small>'+htmlEscape(p.company)+'</small><strong>'+htmlEscape(p.title)+'</strong><span class="sandbox-card-summary">'+htmlEscape(p.summary)+'</span><span class="sandbox-card-cta">View project ↗</span></span><span class="sandbox-card-art"><img src="portfolio/assets/'+encodeURIComponent(p.image)+'" alt="'+htmlEscape(p.company)+' project hero" loading="lazy"></span></button>').join('');}
+ function open(kind){if(modal.classList.contains('is-open'))return;
+ oldFocus=document.activeElement;listKind=kind;child=null;lastScroll=0;layout();
+ modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');drawBorder();
+ window.__cafeSandboxModalOpen=true;
+ if(typeof keys!=='undefined')keys.clear();
+ if(kind==='resume'){modal.classList.add('is-resume');list.hidden=true;frame.classList.remove('is-open');frame.removeAttribute('src');resumeBox.hidden=false;resumeViewport.scrollTo(0,0);$s('resumeExit').focus();requestAnimationFrame(showPdf);}
+ else{modal.classList.remove('is-resume');resumeBox.hidden=true;frame.classList.remove('is-open');frame.removeAttribute('src');list.hidden=false;list.src='portfolio/cafe-list.html?view='+encodeURIComponent(kind);$s('sandboxTitle').textContent=kind==='selected'?'Selected works':'All projects';$s('sandboxTitle').hidden=false;$s('sandboxBack').hidden=true;list.focus();}
+ }
+ function openSideQuests(){child='side-quests';frame.src='portfolio/work/side-quests/index.html?cafe=1';frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
+ function openProject(i){const p=projects[i];if(!p)return;child=i;frame.src='portfolio/work/'+p.url+'index.html?cafe=1';frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
+ // Make the case-study iframe the initial keyboard scroll target after its page loads.
+ frame.addEventListener('load',()=>{if(child===null||!modal.classList.contains('is-open'))return;
+   try{const body=frame.contentDocument?.body;if(body){body.tabIndex=-1;body.focus({preventScroll:true});}}catch(err){frame.focus({preventScroll:true});}
+ });
+ function showCaseStudyToolbar(){const backButton=$s('sandboxBack');if(child!==null&&!backButton.hidden){backButton.focus({preventScroll:true});return true;}return false;}
+ function back(){if(child!==null){const previous=child;child=null;frame.classList.remove('is-open');frame.removeAttribute('src');list.hidden=false;$s('sandboxBack').hidden=true;$s('sandboxTitle').textContent=listKind==='selected'?'Selected works':'All projects';$s('sandboxTitle').hidden=false;list.focus();}else close();}
+ function close(){++pdfRenderRun;resumeBox.hidden=true;modal.classList.remove('is-resume');frame.classList.remove('is-open');frame.removeAttribute('src');modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true');window.__cafeSandboxModalOpen=false;child=null;listKind=null;if(typeof keys!=='undefined')keys.clear();document.getElementById('game')?.focus({preventScroll:true});}
+ window.addEventListener('message',e=>{if(e.source===list.contentWindow&&e.data?.type==='cafe-open-project')openProject(Number(e.data.index));});
+ window.addEventListener('cafe-open-selected-works',()=>open('selected'));
+ $s('sandboxBack').addEventListener('click',back);$s('sandboxClose').addEventListener('click',close);
+ window.addEventListener('resize',()=>{if(modal.classList.contains('is-open')){layout();drawBorder()}});window.cafeFrameUpdated=drawBorder;
+ document.addEventListener('keydown',e=>{if(!modal.classList.contains('is-open'))return;
+ if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();
+  if(child!==null){if(document.activeElement===$s('sandboxBack')||document.activeElement===$s('sandboxClose'))close();else showCaseStudyToolbar();}
+  else close();return;}
+ if(child!==null&&['ArrowLeft','ArrowRight'].includes(e.key)&&[$s('sandboxBack'),$s('sandboxClose')].includes(document.activeElement)){
+  e.preventDefault();e.stopImmediatePropagation();(document.activeElement===$s('sandboxBack')?$s('sandboxClose'):$s('sandboxBack')).focus({preventScroll:true});return;
+ }
+ if(e.key==='Tab'){const nodes=Array.from(modal.querySelectorAll('button:not([hidden]):not([disabled]),iframe')).filter(n=>n.getClientRects().length);if(nodes.length){const i=nodes.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();nodes[nodes.length-1].focus()}else if(!e.shiftKey&&i===nodes.length-1){e.preventDefault();nodes[0].focus()}}}
+ },true);
+ window.addEventListener('message',e=>{if(e.source===list.contentWindow&&e.data?.type==='cafe-open-side-quests'){openSideQuests();}});
+ window.addEventListener('message',e=>{if(e.data==='cafe-sandbox-back'){if(child!==null)back();else close()}});
+
+ // Café menu routes to the existing portfolio viewers; it never duplicates case-study content.
+ const cafeNav=document.createElement('div'); cafeNav.id='cafeNavMenu';cafeNav.hidden=true;
+ cafeNav.innerHTML=`<section class="cafe-nav-panel" role="dialog" aria-modal="true" aria-label="Café menu">
+ <header class="cafe-nav-header"><h2>Quick menu</h2><button type="button" class="cafe-nav-close" aria-label="Close menu">${window.cafeMuiIcon("close")}<span>ESC</span></button></header>
+ <div class="cafe-nav-body">
+ <button data-cafe-action="selected">Selected works</button>
+ <button data-cafe-action="all">All projects</button>
+ <button data-cafe-action="about">About me</button>
+ <button data-cafe-action="resume">Resume</button>
+ <a class="cafe-nav-primary" href="https://www.ambertang.com" target="_blank" rel="noopener noreferrer" data-cafe-action="external">My “Professional” portfolio ↗</a>
+ </div><footer class="cafe-nav-footer">Vibe coded by me 2026 👾</footer></section>`;
+ document.getElementById('stage').appendChild(cafeNav);
+ function closeCafeNavMenu(){cafeNav.hidden=true;window.__cafeSandboxModalOpen=false;if(typeof keys!=='undefined')keys.clear();document.getElementById('game')?.focus({preventScroll:true});}
+ function showCafeNavMenu(){if(modal.classList.contains('is-open'))return;const m=document.getElementById('musicModal');if(m&&!m.hidden)return;
+ cafeNav.hidden=false;window.__cafeSandboxModalOpen=true;if(typeof keys!=='undefined')keys.clear();cafeNav.querySelector('[data-cafe-action="selected"]')?.focus({preventScroll:true});}
+ cafeNav.addEventListener('click',event=>{
+  if(event.target===cafeNav||event.target.closest('.cafe-nav-close')){closeCafeNavMenu();return;}
+  const a=event.target.closest('[data-cafe-action]');if(!a)return;
+  const action=a.dataset.cafeAction;closeCafeNavMenu();
+  if(action==='external')return;
+  if(action==='about'){
+   const zone=interactions.find(z=>z.id==='hotspot-0icms3');
+   if(zone)trigger(zone);return;
+  }
+  open(action);
+ });
+ cafeNav.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCafeNavMenu();}});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!cafeNav.hidden){e.preventDefault();e.stopImmediatePropagation();closeCafeNavMenu();}},true);
+ window.sandboxIntercept=function(z){const id=(z.linkedTo||'')+' '+(z.id||'')+' '+(z.label||'');
+ if(z.id==='hotspot-tbxqew'||/menu hover|menu-23/i.test(id)){showCafeNavMenu();return true;}
+ // Keep the record player's existing music integration untouched.
+ if(/record/i.test(id))return false;
+ if(/resume/i.test(id)||z.id==='hotspot-ykxszw'){open('resume');return true;}
+ if(/selected/i.test(id)||z.id==='hotspot-ou1jd7'){open('selected');return true;}
+ if(/all.projects|shelf-all/i.test(id)||z.id==='hotspot-hynaff'){open('all');return true;}
+ return false;};
+ // Expose quick-opening controls for sandbox review outside walk mode.
+ const quick=document.createElement('div');quick.id='sandboxQuick';quick.style='position:fixed;bottom:12px;left:12px;z-index:92;display:flex;gap:6px;flex-wrap:wrap;max-width:70vw';
+ quick.innerHTML='<button type="button" data-kind="resume">Resume</button><button type="button" data-kind="selected">Selected Works</button><button type="button" data-kind="all">All Projects</button>';
+ quick.querySelectorAll('button').forEach(b=>{b.style='font:600 12px system-ui;background:#282035;color:white;border:1px solid #9782aa;padding:8px 10px;border-radius:8px;cursor:pointer';b.onclick=()=>open(b.dataset.kind)});document.body.appendChild(quick);
+
+ // Re-draw the exact scene border asset above all portfolio overlays.
+ const borderCanvas=$s('sandboxFrameBorder');
+ function drawBorder(){
+   const im=(typeof images!=='undefined')?images['frame.png']:null;
+   if(!im||!im.complete)return false;
+   const c=borderCanvas.getContext('2d');c.clearRect(0,0,borderCanvas.width,borderCanvas.height);
+   c.drawImage(im,0,0,borderCanvas.width,borderCanvas.height);return true;
+ }
+ let borderTries=0;
+ function ensureBorder(){if(drawBorder()||borderTries++>120)return;requestAnimationFrame(ensureBorder)}
+ ensureBorder();
+ const resumeBox=$s('resumeStandalone'),resumeViewport=$s('resumeDocument'),resumeHost=$s('resumePageHost'),resumeStatus=$s('resumeLoadStatus');
+ const resumePDF='portfolio/assets/amber-tang-2026-resume.pdf';
+ // Use the actual PDF, not a canvas snapshot or a raster fallback.
+ // Chrome, Edge, Safari, and Firefox provide their native selectable-text PDF UI.
+ let pdfRenderRun=0;
+ function showPdf(){
+   ++pdfRenderRun;
+   resumeStatus.hidden=true;
+   let viewer=resumeHost.querySelector('iframe');
+   if(!viewer){
+     viewer=document.createElement('iframe');
+     viewer.title='Amber Tang original resume PDF — selectable text';
+     viewer.setAttribute('aria-label','Original resume PDF document');
+     viewer.style.cssText='display:block;border:0;width:100%;height:100%;background:#fff';
+     resumeHost.replaceChildren(viewer);
+   }
+   viewer.setAttribute('src',resumePDF+'#toolbar=1&navpanes=0&zoom=100');
+ }
+ // The native PDF toolbar owns search, zoom, selection, print, and downloads.
+ // Hide the old canvas-specific zoom controls, which cannot control a PDF iframe.
+ for(const id of ['resumeZoomOut','resumeZoomLabel','resumeZoomIn','resumeFitWidth','resumeFitHeight']){
+   const el=$s(id);if(el)el.hidden=true;
+ }
+ $s('resumeExit').onclick=()=>close();
+ // If iframe is active, allow Esc inside the case-study content to request parent-level close,
+ // but preserve native zoom/modal close behavior inside portfolio itself.
+ })();
+</script>
+<script id="cafe-v29-modal-centering">
+(()=>{
+ const game=document.getElementById('game');
+ const dialogs=['modal','musicModal'].map(id=>document.getElementById(id));
+ function align(){if(!game)return;const r=game.getBoundingClientRect();for(const d of dialogs){if(!d)continue;
+ d.style.left=r.left+'px';d.style.top=r.top+'px';d.style.width=r.width+'px';d.style.height=r.height+'px';}}
+ align();window.addEventListener('resize',align,{passive:true});
+ if('ResizeObserver' in window)new ResizeObserver(align).observe(game);
+ // Recenter when a real dialogue is opened; no observers affecting gameplay or pointer input.
+ for(const d of dialogs)if(d)new MutationObserver(align).observe(d,{attributes:true,attributeFilter:['hidden']});
+ document.getElementById('testButton')?.addEventListener('click',()=>{align();if(document.getElementById('testButton')?.textContent?.includes('Return to editor'))game.focus({preventScroll:true})});
+ window.addEventListener('keydown',e=>{
+  if(!window.testMode && typeof testMode!=='undefined' && !testMode)return;
+  if(document.getElementById('portfolioSandbox')?.classList.contains('is-open'))return;
+  if(e.key==='Escape')return;
+ },{capture:false});
+})();
+</script>
+<style id="cafe-v33-icon-style">
+.cafe-mui-icon{width:20px!important;height:20px!important;flex:0 0 20px!important;display:inline-block!important;vertical-align:middle!important;stroke:currentColor!important}
+#dialog button,#musicDialog button,#musicDialog .playglyph,#portfolioSandbox button,#portfolioSandbox .resume-actions a{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important}
+#musicDialog .music-track{justify-content:flex-start!important}
+#musicDialog .music-track .playglyph{flex:0 0 20px!important}
+#musicDialog .music-header h2{display:flex;align-items:center;gap:8px}
+#musicDialog .music-header button,#sandboxToolbar #sandboxClose{min-width:38px!important;min-height:38px!important}
+</style>
+<script id="cafe-v33-modal-icons">
+(()=>{
+ const icon=window.cafeMuiIcon;
+ const btn=(id,name,label)=>{const b=document.getElementById(id);if(!b)return; b.innerHTML=icon(name)+(label?'<span>'+label+'</span>':'');};
+ btn('musicClose','close','ESC');{const randomButton=document.getElementById('musicNext');if(randomButton)randomButton.innerHTML=cafeMusicFilledIcon('shuffle')+'<span>Random</span>';}btn('sandboxClose','close','ESC');btn('sandboxBack','back','Back to projects');
+ btn('resumeExit','close','ESC');btn('closeDialog','close','ESC');btn('resumeZoomOut','zoomOut','');btn('resumeZoomIn','zoomIn','');
+ btn('resumeFitWidth','expand','Fit width');btn('resumeFitHeight','expand','Fit height');
+ // Controls outside the embedded portfolio share the same outlined icon language.
+ btn('undoButton','undo','Undo');btn('redoButton','redo','Redo');btn('saveButton','save','Save');
+ btn('importButton','upload','Import JSON');btn('exportButton','download','Download level JSON');btn('screenshotButton','photo','Save screenshot');
+ // Music button is updated by musicStatus as playback changes; initialize the idle state.
+ btn('musicPlayPause','play','Play');
+})();
+</script>
+<div id="arcadeModal" data-kind="tetris" hidden>
+ <section id="arcadeDialog" role="dialog" aria-modal="true" aria-labelledby="arcadeTitle" tabindex="-1">
+  <header class="arcadeHead"><h2 id="arcadeTitle">Arcade</h2><button id="arcadeClose" type="button" aria-label="Close arcade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>ESC</button></header>
+  <div class="arcadeBody">
+   <div id="arcadeIntro"><h3 id="arcadeIntroTitle"></h3><p id="arcadeIntroText"></p><div class="arcadeInstructions" id="arcadeInstructions"></div><button class="arcadeBtn" id="arcadeStart" type="button">Start game</button></div>
+   <div id="arcadePlay" hidden><canvas id="arcadeCanvas" width="240" height="480" aria-label="Arcade game board"></canvas><aside class="arcadeSidebar"><div class="arcadeStat" id="arcadeTimeStat">Time<strong id="arcadeTime">0:00.00</strong></div><div class="arcadeStat" id="arcadeLineStat">Lines<strong id="arcadeLines">0 / 40</strong></div><div class="arcadeStat" id="arcadeScoreStat" hidden>Score<strong id="arcadeScore">0</strong></div><div class="arcadeStat" id="arcadeNextStat">Next<canvas id="arcadeNext" width="76" height="76"></canvas></div><div class="arcadeStat" id="arcadeHoldStat">Hold<canvas id="arcadeHold" width="76" height="76"></canvas></div><p id="arcadePlayHint"></p></aside></div>
+   <div id="arcadeFinish" hidden><div class="arcadeFinishCard"><h3 id="arcadeFinishTitle"></h3><p id="arcadeFinishDescription"></p><div id="arcadeResult"></div><button class="arcadeBtn" id="arcadeReplay" type="button">Play again</button></div></div>
+  </div>
+ </section>
+</div>
+
+<script id="cafe-v42-arcade-games">
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const modal=$('arcadeModal'), dialog=$('arcadeDialog'), board=$('arcadeCanvas'), ctx=board.getContext('2d'), nextCtx=$('arcadeNext').getContext('2d'), holdCtx=$('arcadeHold').getContext('2d');
+$('stage').appendChild(modal);
+const intro=$('arcadeIntro'),playing=$('arcadePlay'),finish=$('arcadeFinish');
+const palette=['','#b68af0','#6aabf4','#f2af6d','#e7d66a','#7cceaa','#cc8ef3','#ee8cad'];
+const shapes=[null,[[1,1,1,1]],[[2,0,0],[2,2,2]],[[0,0,3],[3,3,3]],[[4,4],[4,4]],[[0,5,5],[5,5,0]],[[0,6,0],[6,6,6]],[[7,7,0],[0,7,7]]];
+let kind='tetris',phase='intro',state=null,raf=0,lastFrame=0,previousFocus=null;
+let snakePending=null;const heldKeys=new Map();let audioContext=null;
+function beep(type){try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;audioContext=audioContext||new A();if(audioContext.state==='suspended')audioContext.resume();const at=audioContext.currentTime;const notes=type==='line'?[560,740,990]:[520,780];notes.forEach((freq,i)=>{const osc=audioContext.createOscillator(),vol=audioContext.createGain(),t=at+i*.065;osc.type=type==='line'?'square':'triangle';osc.frequency.setValueAtTime(freq,t);vol.gain.setValueAtTime(.065,t);vol.gain.exponentialRampToValueAtTime(.001,t+.095);osc.connect(vol).connect(audioContext.destination);osc.start(t);osc.stop(t+.1)})}catch(e){}}
+const formatTime=ms=>{const cent=Math.floor(Math.max(0,ms)/10),sec=Math.floor(cent/100);return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+'.'+String(cent%100).padStart(2,'0')};
+const rand=n=>Math.floor(Math.random()*n);
+const copyShape=id=>shapes[id].map(row=>row.slice());
+function setPhase(value){phase=value;modal.dataset.phase=value;intro.hidden=value!=='intro';playing.hidden=value==='intro';finish.hidden=value!=='finish';}
+function stopLoop(){cancelAnimationFrame(raf);raf=0;lastFrame=0;}
+function open(type){if(!modal.hidden||$('portfolioSandbox')?.classList.contains('is-open')||!$('musicModal').hidden||!$('modal').hidden)return;
+ previousFocus=document.activeElement;kind=type;modal.dataset.kind=type;modal.hidden=false;$('arcadeTitle').textContent=type==='tetris'?'Tetris · 40 lines':'Snake';
+ $('arcadeIntroTitle').textContent=type==='tetris'?'Tetris sprint':'Snake run';
+ $('arcadeIntroText').textContent=type==='tetris'?'Clear 40 lines as fast as you can':'Collect food, grow longer. How high can you score?';
+ $('arcadeInstructions').innerHTML=type==='tetris'?'<b>How to play</b><div class="arcade-instruction-row"><span>Move pieces</span><span class="arcade-instruction-keys"><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span class="arcade-key-separator">or</span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div><div class="arcade-instruction-row"><span>Rotate clockwise</span><span class="arcade-instruction-keys"><kbd>↑</kbd><span class="arcade-key-separator">or</span><kbd>W</kbd></span></div><div class="arcade-instruction-row"><span>Hold or swap a piece</span><span class="arcade-instruction-keys"><kbd>Shift</kbd></span></div><div class="arcade-instruction-row"><span>Hard drop</span><span class="arcade-instruction-keys"><kbd>Space</kbd></span></div>':'<b>How to play</b><div class="arcade-instruction-row"><span>Turn</span><span class="arcade-instruction-keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd><span class="arcade-key-separator">or</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div><div class="arcade-instruction-row"><span>Eat purple food to earn 10 points</span></div><div class="arcade-instruction-row"><span>Avoid walls and your tail</span></div>';
+ $('arcadeStart').textContent='Start game';
+ stopLoop();heldKeys.clear();state=null;setPhase('intro');$('arcadeScoreStat').hidden=type!=='snake';$('arcadeTimeStat').hidden=type==='snake';$('arcadeLineStat').hidden=type==='snake';$('arcadeNextStat').hidden=type==='snake';$('arcadeHoldStat').hidden=type==='snake';
+ $('arcadePlayHint').textContent=type==='tetris'?'← → move · ↑ rotate · Space hard drop · P pause':'Arrows / WASD turn · P pause';
+ dialog.focus({preventScroll:true});
+}
+window.cafeArcadeOpen=open;
+function close(){stopLoop();heldKeys.clear();modal.hidden=true;state=null;phase='intro';if(typeof keys!=='undefined')keys.clear();const target=$('game');target?.focus({preventScroll:true});}
+$('arcadeClose').addEventListener('click',close);
+function start(){stopLoop();heldKeys.clear();finish.style.removeProperty('--arcade-final-board');setPhase('playing');if(kind==='tetris'){board.width=240;board.height=480;startTetris()}else{board.width=400;board.height=400;startSnake()}dialog.focus({preventScroll:true});raf=requestAnimationFrame(loop)}
+$('arcadeStart').addEventListener('click',start);$('arcadeReplay').addEventListener('click',start);
+function endGame(won){
+ // Retain the actual final canvas at precisely the original on-screen size.
+ stopLoop();setPhase('finish');$('arcadeFinishTitle').textContent=kind==='tetris'?(won?'40 lines cleared!':'Game over'):'Game over';
+ $('arcadeFinishDescription').textContent=kind==='tetris'?(won?'Your final 40-line sprint time:':'You topped out before clearing 40 lines. Try again!'):'Your final Snake score:';
+ $('arcadeResult').textContent=kind==='tetris'?(won?formatTime(state.elapsed):state.lines+' / 40 lines'):String(state.score)+' points';
+ $('arcadeReplay').focus({preventScroll:true});}
+function paintTile(c,x,y,size,color){c.fillStyle=color;c.fillRect(x+1,y+1,size-2,size-2);c.fillStyle='#ffffff45';c.fillRect(x+2,y+2,size-4,3);c.fillStyle='#00000036';c.fillRect(x+2,y+size-5,size-4,3)}
+function bagPiece(){if(!state.bag.length){state.bag=[1,2,3,4,5,6,7];for(let i=6;i>0;i--){const j=rand(i+1);[state.bag[i],state.bag[j]]=[state.bag[j],state.bag[i]];}}return state.bag.pop()}
+function startTetris(){state={cells:Array.from({length:20},()=>Array(10).fill(0)),bag:[],lines:0,elapsed:0,paused:false,gravity:0,piece:null,queue:[],heldPiece:null,holdUsed:false,groundMs:0};state.queue.push(bagPiece(),bagPiece(),bagPiece());spawn();drawTetris()}
+function putPiece(id){const mat=copyShape(id);state.piece={id,m:mat,x:Math.floor((10-mat[0].length)/2),y:-1};state.groundMs=0;if(collides(state.piece))endGame(false)}
+function spawn(){const id=state.queue.shift();state.queue.push(bagPiece());state.holdUsed=false;putPiece(id)}
+function holdPiece(){if(!state||state.holdUsed||phase!=='playing')return;const current=state.piece.id;state.holdUsed=true;if(state.heldPiece===null){state.heldPiece=current;const id=state.queue.shift();state.queue.push(bagPiece());putPiece(id)}else{const id=state.heldPiece;state.heldPiece=current;putPiece(id)}drawTetris()}
+function collides(p){return p.m.some((row,yy)=>row.some((cell,xx)=>{if(!cell)return false;const x=p.x+xx,y=p.y+yy;return x<0||x>=10||y>=20||(y>=0&&state.cells[y][x])}))}
+function moveT(dx,dy){const p=state.piece,n={...p,x:p.x+dx,y:p.y+dy};if(collides(n))return false;state.piece=n;if(dy>0)state.groundMs=0;return true}
+function rotate(dir){const old=state.piece;const m=dir===1?old.m[0].map((_,x)=>old.m.map(row=>row[x]).reverse()):old.m[0].map((_,x)=>old.m.map(row=>row[row.length-1-x]));for(const ox of [0,-1,1,-2,2]){const n={...old,m,x:old.x+ox};if(!collides(n)){state.piece=n;return}}}
+function lockT(){const p=state.piece;let above=false;p.m.forEach((row,yy)=>row.forEach((v,xx)=>{if(!v)return;const y=p.y+yy;if(y<0)above=true;else state.cells[y][p.x+xx]=v}));if(above){endGame(false);return}
+ let cleared=0;for(let y=19;y>=0;y--){if(state.cells[y].every(Boolean)){state.cells.splice(y,1);state.cells.unshift(Array(10).fill(0));cleared++;y++}}
+ if(cleared)beep('line');state.lines+=cleared;$('arcadeLines').textContent=state.lines+' / 40';if(state.lines>=40){endGame(true);return}spawn()}
+function dropT(){while(moveT(0,1)){}lockT()}
+function drawTetris(){if(!state)return;const ts=24;ctx.fillStyle='#21192f';ctx.fillRect(0,0,240,480);ctx.strokeStyle='#ffffff12';ctx.lineWidth=1;for(let x=0;x<=10;x++){ctx.beginPath();ctx.moveTo(x*ts+.5,0);ctx.lineTo(x*ts+.5,480);ctx.stroke()}for(let y=0;y<=20;y++){ctx.beginPath();ctx.moveTo(0,y*ts+.5);ctx.lineTo(240,y*ts+.5);ctx.stroke()}
+ state.cells.forEach((row,y)=>row.forEach((v,x)=>{if(v)paintTile(ctx,x*ts,y*ts,ts,palette[v])}));
+ if(state.piece){const p=state.piece;let ghost={...p};while(!collides({...ghost,y:ghost.y+1}))ghost={...ghost,y:ghost.y+1};ghost.m.forEach((row,yy)=>row.forEach((v,xx)=>{if(!v||ghost.y+yy<0)return;ctx.strokeStyle='#e1d0f388';ctx.lineWidth=2;ctx.strokeRect((ghost.x+xx)*ts+3,(ghost.y+yy)*ts+3,ts-6,ts-6)}));p.m.forEach((row,yy)=>row.forEach((v,xx)=>{if(v&&p.y+yy>=0)paintTile(ctx,(p.x+xx)*ts,(p.y+yy)*ts,ts,palette[v])}))}
+ holdCtx.fillStyle='#21192f';holdCtx.fillRect(0,0,76,76);if(state.heldPiece!==null){const h=copyShape(state.heldPiece),hs=16,hx=(76-h[0].length*hs)/2,hy=(76-h.length*hs)/2;h.forEach((row,y)=>row.forEach((v,x)=>{if(v)paintTile(holdCtx,hx+x*hs,hy+y*hs,hs,palette[state.heldPiece])}))}nextCtx.fillStyle='#21192f';nextCtx.fillRect(0,0,76,76);const id=state.queue[0],m=copyShape(id),size=16;const ox=(76-m[0].length*size)/2,oy=(76-m.length*size)/2;m.forEach((row,y)=>row.forEach((v,x)=>{if(v)paintTile(nextCtx,ox+x*size,oy+y*size,size,palette[id])}))}
+function startSnake(){let size=20;state={size,snake:[{x:9,y:10},{x:8,y:10},{x:7,y:10}],dir:{x:1,y:0},pending:{x:1,y:0},food:null,score:0,acc:0,paused:false};snakeFood();$('arcadeScore').textContent='0';drawSnake()}
+function snakeFood(){const free=[];for(let y=0;y<state.size;y++)for(let x=0;x<state.size;x++)if(!state.snake.some(p=>p.x===x&&p.y===y))free.push({x,y});if(!free.length){endGame(true);return}state.food=free[rand(free.length)]}
+function snakeStep(){const s=state,d=s.pending;s.dir=d;const head={x:s.snake[0].x+d.x,y:s.snake[0].y+d.y},eats=head.x===s.food.x&&head.y===s.food.y;
+ if(head.x<0||head.y<0||head.x>=s.size||head.y>=s.size||s.snake.slice(0,eats?undefined:-1).some(p=>p.x===head.x&&p.y===head.y)){endGame(false);return}
+ s.snake.unshift(head);if(eats){s.score+=10;beep('apple');$('arcadeScore').textContent=String(s.score);snakeFood()}else s.snake.pop()}
+function drawSnake(){if(!state)return;const t=20;ctx.fillStyle='#21192f';ctx.fillRect(0,0,400,400);for(let y=0;y<20;y++)for(let x=0;x<20;x++){ctx.fillStyle=(x+y)%2===0?'#30243e':'#2b2039';ctx.fillRect(x*t,y*t,t,t)}
+ if(state.food){const p=state.food;paintTile(ctx,p.x*t,p.y*t,t,'#d998ff')}state.snake.forEach((p,i)=>paintTile(ctx,p.x*t,p.y*t,t,i===0?'#9be2c5':'#7bc3a5'))}
+function loop(t){if(phase!=='playing')return;if(!lastFrame)lastFrame=t;const dt=Math.min(100,t-lastFrame);lastFrame=t;
+ if(!state.paused){if(kind==='tetris'){
+  for(const [key,h] of heldKeys){const interval=key==='arrowdown'||key==='s'?62:85;h.ms+=dt;while(h.ms>=h.next){h.next+=interval;if(key==='arrowleft'||key==='a')moveT(-1,0);else if(key==='arrowright'||key==='d')moveT(1,0);else if(!moveT(0,1))break}}
+  state.elapsed+=dt;state.gravity+=dt;const interval=630;
+  if(state.gravity>=interval){state.gravity%=interval;moveT(0,1)}
+  if(state.piece){if(collides({...state.piece,y:state.piece.y+1})){state.groundMs+=dt;if(state.groundMs>=1000){lockT();state.groundMs=0}}else state.groundMs=0}
+  $('arcadeTime').textContent=formatTime(state.elapsed);if(phase==='playing')drawTetris()
+ }else{state.acc+=dt;const interval=Math.max(85,115-Math.floor(state.score/50)*4);while(state.acc>=interval&&phase==='playing'){state.acc-=interval;snakeStep()}if(phase==='playing')drawSnake()}}
+ if(phase==='playing')raf=requestAnimationFrame(loop)}
+function keydown(e){if(modal.hidden)return;const key=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown',' ','w','a','s','d','p','z','x','shift','escape','enter'].includes(key)){e.preventDefault();e.stopImmediatePropagation();e.stopPropagation()}
+ if(key==='escape'){close();return}if(phase==='intro'){if(key==='enter')start();return}if(phase==='finish'){if(key==='enter')start();return}if(phase!=='playing')return;
+ if(key==='p'){if(!e.repeat)state.paused=!state.paused;return}if(state.paused)return;
+ if(kind==='tetris'){
+  if(['arrowleft','a','arrowright','d','arrowdown','s'].includes(key)){
+   if(!heldKeys.has(key)){heldKeys.set(key,{ms:0,next:key==='arrowdown'||key==='s'?70:155});if(key==='arrowleft'||key==='a')moveT(-1,0);else if(key==='arrowright'||key==='d')moveT(1,0);else moveT(0,1)}
+  }else if(!e.repeat){if(key==='arrowup'||key==='x'||key==='w')rotate(1);else if(key==='z')rotate(-1);else if(key==='shift')holdPiece();else if(key===' ')dropT()}
+  if(phase==='playing')drawTetris();
+ }else{
+  const directions={arrowup:{x:0,y:-1},w:{x:0,y:-1},arrowdown:{x:0,y:1},s:{x:0,y:1},arrowleft:{x:-1,y:0},a:{x:-1,y:0},arrowright:{x:1,y:0},d:{x:1,y:0}};
+  const d=directions[key];if(d&&!(d.x===-state.dir.x&&d.y===-state.dir.y)){state.pending=d;if(state.acc>=65){state.acc=0;snakeStep();if(phase==='playing')drawSnake()}}
+ }
+}
+function keyup(e){if(modal.hidden)return;heldKeys.delete(e.key.toLowerCase());if(['arrowleft','arrowright','arrowup','arrowdown',' ','w','a','s','d','shift'].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation()}}
+window.addEventListener('keyup',keyup,true);
+window.addEventListener('keydown',keydown,true);
+modal.addEventListener('pointerdown',e=>e.stopPropagation());
+window.addEventListener('blur',()=>{if(phase==='playing'&&state)state.paused=true});
+})();
+</script>
+
+<style id="cafe-v49-review-style">
+ #cafeReviewModal[hidden]{display:none!important}
+ #cafeReviewModal{position:absolute;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(22,16,31,.59);padding:20px;box-sizing:border-box}
+ #cafeReviewDialog{width:min(700px,94%);max-height:88%;overflow:hidden;background:#fffefa;border-radius:13px;box-shadow:0 22px 60px #25152e4a;display:flex;flex-direction:column;color:#29252e;font-family:'DM Sans',Arial,sans-serif}
+ .cafe-review-header{min-height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 21px;border-bottom:1px solid #ede9e7;background:#fbf9f5}
+ .cafe-review-header h2{margin:0;font-size:19px;font-weight:600;line-height:1.3}
+ #cafeReviewClose{display:inline-flex;align-items:center;gap:8px;color:#3a3440;font-family:inherit;font-size:13px;font-weight:500;border:1px solid #ded9dd;background:white;border-radius:8px;padding:9px 12px;cursor:pointer}
+ #cafeReviewClose svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+ .cafe-review-body{padding:25px;overflow:auto;min-height:0}
+ .cafe-review-person{display:flex;gap:15px;align-items:center;margin-bottom:18px}
+ #cafeReviewPortrait{width:62px;height:62px;object-fit:cover;border-radius:50%;background:#f5eff9;flex-shrink:0}
+ #cafeReviewName{font-size:17px;font-weight:650;margin:0 0 3px}
+ #cafeReviewMeta{font-size:13px;color:#66616a;margin:0}
+ #cafeReviewText{font-size:15px;line-height:1.65;white-space:pre-wrap;margin:0;color:#343037}
+ .cafe-review-actions{padding:16px 25px 22px;display:flex;justify-content:flex-start}
+ #cafeReviewLinkedIn{display:inline-flex;align-items:center;gap:9px;padding:11px 15px;border-radius:8px;border:1px solid #9a76cb;background:#f9f5ff;color:#6132a1;font-size:14px;font-weight:600;text-decoration:none}
+ #cafeReviewLinkedIn:hover,#cafeReviewLinkedIn:focus-visible{background:#efe5fc;outline:2px solid #8e64cc;outline-offset:2px}
+ .cafe-review-empty{font-size:14px;color:#6c626f}
+</style>
+<div id="cafeReviewModal" hidden role="presentation">
+ <section id="cafeReviewDialog" role="dialog" aria-modal="true" aria-labelledby="cafeReviewTitle" tabindex="-1">
+  <div class="cafe-review-header"><h2 id="cafeReviewTitle">Recommendation</h2><button id="cafeReviewClose" type="button" aria-label="Close recommendation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5L19 19M19 5L5 19"/></svg> ESC</button></div>
+  <div class="cafe-review-body"><div class="cafe-review-person"><img id="cafeReviewPortrait" alt="" hidden/><div><p id="cafeReviewName"></p><p id="cafeReviewMeta"></p></div></div><p id="cafeReviewText"></p><p id="cafeReviewEmpty" class="cafe-review-empty" hidden>This recommendation has not been added yet.</p></div>
+  <div class="cafe-review-actions"><a id="cafeReviewLinkedIn" href="https://www.linkedin.com/in/ambertang/details/recommendations/?detailScreenTabIndex=0" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2ZM8.6 18H5.9V9.4h2.7V18ZM7.25 8.2a1.55 1.55 0 1 1 0-3.1 1.55 1.55 0 0 1 0 3.1ZM18 18h-2.7v-4.2c0-1-.02-2.3-1.4-2.3-1.4 0-1.6 1.1-1.6 2.2V18H9.6V9.4h2.6v1.2h.04a2.85 2.85 0 0 1 2.55-1.4c2.7 0 3.2 1.8 3.2 4.1V18Z"/></svg>View all recommendations</a></div>
+ </section>
+</div>
+<script id="cafe-v49-review-interactions">
+(()=>{
+ 'use strict';
+ // Associate a sprite interaction by setting its JSON hotspot `action` to "review".
+ // Attach either its review object (review:{name,meta,text,portrait}) or reference
+ // a registered ID (reviewId:"slug") in window.CAFE_REVIEWS.
+ window.CAFE_REVIEWS=window.CAFE_REVIEWS||{};
+ window.CAFE_REVIEWS.oscar={"name": "Oscar Qiu", "meta": "Senior Software Engineer and Team Lead at TikTok, Certified Google Cloud Engineer · October 25, 2026 · Worked with Amber on the same team", "portrait": "assets/oscar-review-profile.png", "text": "Amber was one of the lead designers on my team. She consistently delivered thoughtful designs with quick turnaround times and was always responsive to our team's questions and technical constraints. She also actively invited engineers to participate in user research which helped us better understand user needs. Her design reviews were detailed and intentional and would account for edge cases and implementation details.\n\nSeparately we also partnered on a SacHack hackathon project and won first place in our category, outcompeting 400+ competitors for an AR/VR social engagement feature using Unity and Google ARCore.\n\nI enjoy working with Amber and would recommend her for any team looking for a strong designer and collaborator."};
+ window.CAFE_REVIEWS.maria={"name": "Maria Knausz, MBA", "meta": "Product Operations Leader at Korn Ferry · October 11, 2021 · Worked with Amber on the same team", "portrait": "assets/maria-review-profile.png", "text": "Amber is an absolute rock star! During our time working together, she continuously delivered amazing thought leadership and creative design ideas. Our team operated at an extremely fast pace and Amber showed up every single day with a great attitude - always ready to support the team! One of the things that impressed me the most was that she provided consistent answers to questions from our engineers even down to the smallest details, which was so important at the pace we operated. Amber really has it all - on one hand she is creative with the ability to put new designs together quickly, and on the other hand she is organized and detail oriented. What's more, she was always prepared, always on time, and always genuinely nice! She was an integral part of the success of our team and our product. Thank you Amber!"};
+ const $=id=>document.getElementById(id);
+ const modal=$('cafeReviewModal'), close=$('cafeReviewClose');
+ // Keep recommendation overlays in the actual game stage instead of the page body.
+ // The game canvas is centered within #stage, so this also centers the dialog on the game frame.
+ $('stage').appendChild(modal);
+ let previousFocus=null;
+ const text=(id,v)=>{$(id).textContent=typeof v==='string'?v:''};
+ window.cafeShowReview=(zone)=>{
+  const data=zone?.review || window.CAFE_REVIEWS[zone?.reviewId] || {};
+  const img=$('cafeReviewPortrait');
+  if(typeof data.portrait==='string'&&data.portrait){img.src=data.portrait;img.alt=(data.name||'Reviewer')+' profile photo';img.hidden=false;}else{img.removeAttribute('src');img.hidden=true;}
+  text('cafeReviewName',data.name||'Recommendation');
+  text('cafeReviewMeta',data.meta||'');
+  text('cafeReviewText',data.text||'');
+  $('cafeReviewEmpty').hidden=Boolean(data.text);
+  previousFocus=document.activeElement;
+  modal.hidden=false;
+  close.focus();
+ };
+ const hide=()=>{modal.hidden=true;if(previousFocus?.isConnected)previousFocus.focus();};
+ close.addEventListener('click',hide);
+ modal.addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target===modal)hide();});
+ window.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();hide();}else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)){e.stopPropagation();}},true);
+})();
+</script>
+<div id="cafeAmberChat" hidden role="presentation">
+ <section id="cafeAmberChatDialog" role="dialog" aria-modal="true" aria-labelledby="amberChatTitle" tabindex="-1">
+  <header class="amber-chat-header"><div class="amber-chat-head-person"><img src="assets/amber-chat-profile.png" alt="Amber portrait"><div><strong id="amberChatTitle">Chat with Amber</strong></div></div><button type="button" id="amberChatClose" aria-label="Close chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5L19 19M19 5L5 19"></path></svg>ESC</button></header>
+  <div class="amber-chat-scroll" id="amberChatScroll"><div class="amber-chat-intro" id="amberChatIntro" hidden></div><div class="amber-chat-thread" id="amberChatThread" aria-live="polite"></div><div class="amber-chat-suggestions" id="amberChatSuggestions" aria-label="Suggested questions"></div></div>
+  <div class="amber-chat-bottom"><form id="amberChatForm"><textarea id="amberChatInput" rows="1" placeholder="Ask Amber something…" aria-label="Ask Amber a question"></textarea><button id="amberChatSend" type="submit">Send</button></form></div>
+ </section>
+</div>
+<script src="assets/cafe-config.js"></script><script src="assets/amber-chat.js"></script>
+<style id="cafe-v74-review-button">
+#cafeReviewLinkedIn{background:#fff!important;color:#343039!important;border:1px solid #cfc7c0!important;box-shadow:none!important}
+#cafeReviewLinkedIn:hover,#cafeReviewLinkedIn:focus-visible{background:#fff!important;color:#343039!important;border-color:#8159bc!important;outline:2px solid #8159bc!important;outline-offset:2px!important;box-shadow:none!important}
+</style>
+<script defer src="assets/cafe-keyboard-parent.js"></script>
+</body></html>

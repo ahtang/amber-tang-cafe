@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><script id="cafe-v78-early-keyboard-escape">
+/* Handle Escape at capture phase in every same-origin portfolio iframe. */
+(function(){
+ if(window===parent || !(new URLSearchParams(location.search).has('cafe')||new URLSearchParams(location.search).has('view')))return;
+ function nested(){
+  const d=document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]');
+  if(d&&d.getClientRects().length)return true;
+  const viewer=document.getElementById('comparison-viewer');
+  return !!(viewer&&viewer.getClientRects().length&&(viewer.classList.contains('open')||viewer.classList.contains('is-open')||viewer.getAttribute('aria-hidden')==='false'));
+ }
+ window.addEventListener('keydown',function(e){
+  if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||e.metaKey||e.ctrlKey||e.altKey||nested())return;
+  e.preventDefault();e.stopImmediatePropagation();
+  try{if(typeof parent.cafeCaseKeyboardEscape==='function'&&parent.cafeCaseKeyboardEscape(window))return;}catch(_e){}
+  parent.postMessage({type:'cafe-v77-escape'},'*');
+ },true);
+})();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Café Portfolio Project Cards</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><style>
+html,body{margin:0;min-height:100%;background:#fbf9f5;color:#24212b;overflow-x:hidden}body{padding:clamp(14px,3vw,44px);box-sizing:border-box}#cards{display:grid;gap:clamp(18px,3vw,32px);max-width:1250px;margin:0 auto 50px}.cafe-intro{max-width:1250px;margin:0 auto 24px}.cafe-intro h1{font:800 clamp(26px,3.5vw,44px)/1.1 Manrope,system-ui,sans-serif;letter-spacing:-.045em;margin:0 0 10px}.cafe-intro p{margin:0;color:#706975;font-size:14px}.project-card.split-card{display:grid!important;grid-template-columns:34% minmax(0,66%);width:100%!important;min-width:0!important;max-height:none!important;border:1px solid #e6deea;border-radius:16px!important;box-shadow:none!important;margin:0!important;scroll-snap-align:none!important;transform:none!important;filter:none!important;opacity:1!important;position:relative}.project-card .project-media{min-width:0;overflow:hidden}.project-card:focus-visible{outline:3px solid #7b4dd0;outline-offset:3px}
+@media(max-width:660px){body{padding:14px}.project-card.split-card{grid-template-columns:1fr!important;min-height:0!important;display:flex!important;flex-direction:column}.project-card .project-info{min-height:250px}.project-card .project-media{height:344px}}
+</style><style id="cafe-v31-native-portfolio-cards">
+/* Original portfolio type scales, images, gradients and card styles are inherited from style.css. */
+html{scroll-behavior:auto!important}body{overflow-x:hidden!important}#cards{grid-template-columns:minmax(0,1fr);gap:24px} .project-card.split-card{max-width:100%;} .project-card:focus-visible{outline:3px solid #6846cd;outline-offset:3px}
+</style><style id="cafe-v35-uniform-project-card-heights">
+/* Every project card uses the same height, including its image panel.
+   Cover is limited to the panel; the source image retains its aspect ratio. */
+#cards > .project-card.split-card{height:clamp(469px,65.625vw,726px)!important;min-height:0!important;max-height:726px!important;overflow:hidden;align-items:stretch}
+#cards > .project-card.split-card .project-media{height:100%!important;min-height:0!important;max-height:100%!important;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#cards > .project-card.split-card .project-media img{max-height:100%!important;max-width:100%!important;object-fit:contain!important}
+#cards > .project-card.split-card:hover,
+#cards > .project-card.split-card:focus-visible{outline:3px solid #6846cd!important;outline-offset:3px;border-color:#6846cd!important;box-shadow:none!important}
+@media(max-width:660px){
+ #cards > .project-card.split-card{height:765px!important;max-height:765px!important;display:flex!important;flex-direction:column!important}
+ #cards > .project-card.split-card .project-media{height:344px!important;min-height:344px!important;max-height:344px!important;flex:0 0 344px}
+ #cards > .project-card.split-card .project-info{min-height:0!important;flex:1 1 auto;overflow:hidden}
+}
+</style><style id="cafe-v36-side-quest-card">#cards .side-quests-card .project-media{background:linear-gradient(125deg,#373581 0%,#6257b0 50%,#a88cde 100%)!important;box-shadow:none!important;border:0!important;background-image:linear-gradient(125deg,#373581 0%,#6257b0 50%,#a88cde 100%)!important}
+#cards .side-quests-card .project-media:before,#cards .side-quests-card .project-media:after{content:none!important;display:none!important}
+#cards .side-quests-card .project-media img{width:89%!important;height:auto!important;max-height:83%!important;object-fit:contain!important;object-position:center!important;border-radius:16px!important;box-shadow:0 16px 32px rgba(23,24,69,.16)!important;outline:0!important;border:0!important;filter:none!important;transform:none!important;clip-path:inset(0 round 16px)}
+#cards .side-quests-card:hover .project-media img{filter:none!important;transform:none!important}</style></head><body><main><div class="cafe-intro"><h1 id="title"></h1><p>Explore the work behind the café.</p></div><div id="cards"></div></main><script>
+const companies=[
+ {id:'healthsherpa',name:'HealthSherpa',desc:'Tools that help health insurance agents navigate and manage ACA enrollments with confidence',sector:'Health Marketplace CRM',projects:[['A new homepage for health marketplace agents','Agent homepage','Product design · UX research · Interaction design'],['Streamline client renewals for the 2026 enrollment year','Client renewals','Product design • UX research']]},
+ {id:'calendly',name:'Calendly',desc:'Streamlining the scheduling process with personalized tools for businesses to manage meetings',sector:'Scheduling',projects:[['Driving adoption of admin scheduling templates','Managed-event adoption','Growth • Product design • Usability testing • Experimentation • Visual design'],['Improving activation for new Calendly users','New-user onboarding','Growth • Usability testing • Experimentation'],['Pricing, paywalls, and personalized plans','Monetization','Growth • Product design • UX research • Experimentation']]},
+ {id:'ukg',name:'UKG',desc:'Simplifying performance development to make employee growth more actionable',sector:'HR technology',projects:[['Making employee feedback actionable on mobile','Continuous feedback','Product design • UX research • Hybrid mobile app']]},
+ {id:'side-quests',name:'Side quests',desc:'A messy visual collection of explorations or side projects with small teams',sector:'Independent work',projects:[]}
+];
+const all=companies.flatMap(c=>c.projects.map((project,pi)=>({company:c,pi,title:project[0],type:project[1],skills:project[2],href:`/work/${c.id}/${pi+1}/`,featured:!(c.id==='calendly'&&pi===2)&&c.id!=='ukg'&&!(c.id==='healthsherpa'&&pi===1),image:c.id==='calendly'&&pi===2?'/assets/calendly-mon-hero.svg?v=3':c.id==='ukg'?'/assets/ukg-mobile-hero.svg?v=4':c.id==='healthsherpa'?(pi===0?'/assets/healthsherpa-agent-home-final.png':'/assets/hs-renewals-18.png'):pi===0?'/assets/calendly-case-study-hero.png':'/assets/calendly-nu-01.png',impact:c.id==='calendly'&&pi===2?'+10% increase in paid conversion':c.id==='ukg'?'1,000+ active employees sharing feedback during Beta launch':c.id==='healthsherpa'?(pi===0?'80%+ agent base engagement during the Special Enrollment Period':'Contributed to 30%+ increase in 2026 enrollments'):pi===0?'+60% increase in adoption of admin features':'+5% increase in meetings booked'})));
+const isWorkInProgress=p=>false;
+const publishedProjects=all.filter(p=>!isWorkInProgress(p));
+const app=document.getElementById('app');
+const arrowIcon=(direction='right')=>`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${direction==='left'?'M19 12H5m0 0 6.5 6.5M5 12l6.5-6.5':'M5 12h14m0 0-6.5-6.5M19 12l-6.5 6.5'}"/></svg>`;
+const upIcon=()=>`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m0 0-6.5 6.5M12 5l6.5 6.5"/></svg>`;
+const sparkleIcon=()=>`<svg class="ui-icon sparkle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2c0 5.5-3.5 9-9 9 5.5 0 9 3.5 9 9 0-5.5 3.5-9 9-9-5.5 0-9-3.5-9-9Z"/><path d="M19 18v4m-2-2h4M19 2v4m-2-2h4"/></svg>`;
+function companyMark(c){return `<span class="company-mark ${c.id==='side-quests'?'side-quest-mark':`company-mark-${c.id}`}" aria-hidden="true"><img src="/assets/${c.id}-mark.svg${c.id==='side-quests'?'?v=star-20261017':''}" alt=""></span>`}
+function header(){return `<div id="page-top" aria-hidden="true"></div><header class="site-header"><nav class="nav" aria-label="Primary"><a href="/">Home</a><a href="/#work">Work</a><a href="/#about">About</a><a class="resume-link" href="/assets/amber-tang-2026-resume.pdf?v=20261018-updated" aria-haspopup="dialog" aria-controls="resume-viewer">Resume</a></nav></header>`}
+function footer(){return `<footer class="footer"><div class="footer-inner wrap"><span>Designed and vibe coded by me 👾</span><div class="footer-links"><a href="#page-top">Back to top ${upIcon()}</a></div></div></footer>`}
+function healthSherpaShowcase(){return `<div class="hs-showcase" aria-hidden="true"><div class="hs-desktop-shot"><img src="/assets/healthsherpa-agent-home-final.png" alt=""></div></div>`}
+function calendlyShowcase(p){return `<div class="cal-showcase" aria-hidden="true"><div class="cal-screen"><img src="${p.image}" alt=""></div></div>`}
+function projectCard(p,large=false,featured=false,origin='company'){const health=p.company.id==='healthsherpa';const activation=isWorkInProgress(p);const tag=activation?'div':'a';const attributes=activation?'aria-label="Improving activation for new Calendly users, work in progress"':`href="${p.href}?from=${origin}" aria-label="View case study: ${p.title}"`;return `<${tag} class="project-card split-card ${health?'healthsherpa-card':p.company.id==='ukg'?'ukg-card':'calendly-card'} ${p.company.id==='calendly'&&p.pi===1?'activation-card':''} ${p.company.id==='calendly'&&p.pi===2?'monetization-card':''} ${p.company.id==='healthsherpa'&&p.pi===1?'renewals-card':''} ${large?'large':''}" ${attributes}><span class="project-info"><span class="project-copy"><span class="overline">${p.company.name}</span><strong class="project-title">${p.title}</strong><span class="project-meta"><span class="project-impact">${p.impact}</span><span class="project-skills" aria-label="Skills demonstrated">${p.skills.split(/[•·,]/).map(skill=>skill.trim()).filter(Boolean).map(skill=>`<span class="project-skill">${skill}</span>`).join('')}</span></span></span>${activation?'<span class="work-in-progress-label"><em>Work in progress</em></span>':`<span class="view-project" aria-hidden="true">View</span>`}</span><span class="project-media" aria-hidden="true"><img src="${p.image}" alt="" loading="${origin==='selected'?'eager':'lazy'}" decoding="async"></span></${tag}>`}
+
+
+const mode=new URLSearchParams(location.search).get('view')||'selected';
+const entries=mode==='selected'?publishedProjects.filter(p=>p.featured):publishedProjects;
+document.getElementById('title').textContent=mode==='selected'?'Selected Works':'All Projects';
+document.getElementById('cards').innerHTML=entries.map(p=>projectCard(p,true,p.featured,mode==='selected'?'selected':'company').replace(/src="\/assets\//g,'src="assets/')).join('');
+if(mode!=='selected'){
+ const sq=document.createElement('a');sq.href='work/side-quests/index.html?cafe=1';sq.className='project-card split-card side-quests-card';sq.setAttribute('aria-label','View Side quests: Personal projects');
+ sq.innerHTML=`<span class="project-info"><span class="project-copy"><span class="overline">Side quests</span><strong class="project-title">Personal projects</strong><span class="project-meta"><span class="project-impact">A visual collection of projects I've done for small start up teams or for personal life</span></span></span><span class="view-project" aria-hidden="true">View</span></span><span class="project-media" aria-hidden="true"><img src="assets/side-quests/sq-22.png" alt="" loading="lazy"></span>`;
+ document.getElementById('cards').appendChild(sq);
+}
+
+document.getElementById('cards').addEventListener('click',e=>{const card=e.target.closest('.project-card');if(!card)return;const href=card.getAttribute('href')||'';if(card.classList.contains('side-quests-card')){e.preventDefault();parent.postMessage({type:'cafe-open-side-quests'},'*');return;}const match=href.match(/\/work\/([^/]+)\/(\d+)\//);if(!match)return;e.preventDefault();const ix=publishedProjects.findIndex(p=>p.company.id===match[1]&&p.pi===Number(match[2])-1);parent.postMessage({type:'cafe-open-project',index:ix},'*')});
+</script><script defer src="../assets/cafe-keyboard-child.js"></script></body></html>
