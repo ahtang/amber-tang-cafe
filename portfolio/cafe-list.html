@@ -37,7 +37,17 @@ html{scroll-behavior:auto!important}body{overflow-x:hidden!important}#cards{grid
 </style><style id="cafe-v36-side-quest-card">#cards .side-quests-card .project-media{background:linear-gradient(125deg,#373581 0%,#6257b0 50%,#a88cde 100%)!important;box-shadow:none!important;border:0!important;background-image:linear-gradient(125deg,#373581 0%,#6257b0 50%,#a88cde 100%)!important}
 #cards .side-quests-card .project-media:before,#cards .side-quests-card .project-media:after{content:none!important;display:none!important}
 #cards .side-quests-card .project-media img{width:89%!important;height:auto!important;max-height:83%!important;object-fit:contain!important;object-position:center!important;border-radius:16px!important;box-shadow:0 16px 32px rgba(23,24,69,.16)!important;outline:0!important;border:0!important;filter:none!important;transform:none!important;clip-path:inset(0 round 16px)}
-#cards .side-quests-card:hover .project-media img{filter:none!important;transform:none!important}</style></head><body><main><div class="cafe-intro"><h1 id="title"></h1><p>Explore the work behind the café.</p></div><div id="cards"></div></main><script>
+#cards .side-quests-card:hover .project-media img{filter:none!important;transform:none!important}</style><style id="cafe-v86-directory-mobile-card-order">
+@media(max-width:800px){
+ #cards > .project-card.split-card{display:flex!important;flex-direction:column!important;height:auto!important;min-height:0!important;max-height:none!important}
+ #cards > .project-card.split-card .project-media{order:0!important;height:auto!important;min-height:0!important;max-height:none!important;flex:0 0 auto!important;aspect-ratio:4/3!important;width:100%!important}
+ #cards > .project-card.split-card .project-info{order:1!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding:13px 18px!important}
+ #cards > .project-card.split-card .project-title{margin-bottom:9px!important}
+ #cards > .project-card.split-card .project-meta{gap:9px!important}
+ #cards > .project-card.split-card .view-project{margin-top:10px!important}
+}
+@media(max-width:480px){#cards > .project-card.split-card .project-info{padding:11px 14px!important}}
+</style></head><body><main><div class="cafe-intro"><h1 id="title"></h1><p>Explore the work behind the café.</p></div><div id="cards"></div></main><script>
 const companies=[
  {id:'healthsherpa',name:'HealthSherpa',desc:'Tools that help health insurance agents navigate and manage ACA enrollments with confidence',sector:'Health Marketplace CRM',projects:[['A new homepage for health marketplace agents','Agent homepage','Product design · UX research · Interaction design'],['Streamline client renewals for the 2026 enrollment year','Client renewals','Product design • UX research']]},
  {id:'calendly',name:'Calendly',desc:'Streamlining the scheduling process with personalized tools for businesses to manage meetings',sector:'Scheduling',projects:[['Driving adoption of admin scheduling templates','Managed-event adoption','Growth • Product design • Usability testing • Experimentation • Visual design'],['Improving activation for new Calendly users','New-user onboarding','Growth • Usability testing • Experimentation'],['Pricing, paywalls, and personalized plans','Monetization','Growth • Product design • UX research • Experimentation']]},
@@ -69,5 +79,5 @@ if(mode!=='selected'){
  document.getElementById('cards').appendChild(sq);
 }
 
-document.getElementById('cards').addEventListener('click',e=>{const card=e.target.closest('.project-card');if(!card)return;const href=card.getAttribute('href')||'';if(card.classList.contains('side-quests-card')){e.preventDefault();parent.postMessage({type:'cafe-open-side-quests'},'*');return;}const match=href.match(/\/work\/([^/]+)\/(\d+)\//);if(!match)return;e.preventDefault();const ix=publishedProjects.findIndex(p=>p.company.id===match[1]&&p.pi===Number(match[2])-1);parent.postMessage({type:'cafe-open-project',index:ix},'*')});
+document.getElementById('cards').addEventListener('click',e=>{const card=e.target.closest('.project-card');if(!card)return;const href=card.getAttribute('href')||'';if(card.classList.contains('side-quests-card')){e.preventDefault();parent.postMessage({type:'cafe-open-side-quests'},'*');return;}const match=href.match(/\/work\/([^/]+)\/(\d+)\//);if(!match)return;e.preventDefault();const ix=publishedProjects.findIndex(p=>p.company.id===match[1]&&p.pi===Number(match[2])-1);if(ix>=0)parent.postMessage({type:'cafe-open-project',index:ix},'*')});
 </script><script defer src="../assets/cafe-keyboard-child.js"></script></body></html>

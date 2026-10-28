@@ -1,14 +1,14 @@
-// Keep the downloaded portfolio usable when opened directly from Finder.
+ // Resolve portfolio routes and assets relative to the portfolio folder, whether this site
+ // is opened via Finder or served under a GitHub Pages project path.
 const portfolioLocal = location.protocol === 'file:';
 const portfolioRoot = new URL('.', document.currentScript.src);
 function portfolioURL(value) {
- if (!portfolioLocal || !value.startsWith('/') || value.startsWith('//')) return value;
+ if (!value.startsWith('/') || value.startsWith('//')) return value;
  const url = new URL(value.slice(1), portfolioRoot);
- if (url.pathname.endsWith('/')) url.pathname += 'index.html';
+ if (portfolioLocal && url.pathname.endsWith('/')) url.pathname += 'index.html';
  return url.href;
 }
 function portfolioMarkup(html) {
- if (!portfolioLocal) return html;
  return html.replace(/((?:href|src|data-zoom-src|data-comparison-image)=["'])(\/(?!\/)[^"']*)(["'])/g,
   (_,prefix,value,quote)=>prefix+portfolioURL(value)+quote);
 }
@@ -143,7 +143,20 @@ ${caseNextWork(p)}</main>`}
 
 function imageViewerMarkup(){return `<dialog class="image-viewer" id="comparison-viewer" aria-label="Image viewer"><div class="image-viewer-head"><strong id="viewer-title"></strong><div class="image-viewer-controls"><button type="button" id="viewer-out" aria-label="Zoom out">−</button><output id="viewer-level" aria-live="polite">100%</output><button type="button" id="viewer-in" aria-label="Zoom in">+</button><button type="button" id="viewer-reset">Reset</button><button type="button" id="viewer-close" aria-label="Close image viewer">×</button></div></div><div class="image-viewer-scroll"><img id="viewer-image" alt=""></div></dialog>`}
 function chatMarkup(){return `<div class="chat-overlay" id="chat" aria-hidden="true"><div class="chat-panel" role="dialog" aria-label="Ask about Amber"><div class="chat-bar"><span class="chat-brand">${sparkleIcon()} <strong>Ask Amber</strong><small>Portfolio guide</small></span><button class="chat-close" id="close-chat" aria-label="Close chat">×</button></div><div class="chat-conversation" id="messages"><div class="chat-message assistant"><span class="chat-avatar">${sparkleIcon()}</span><p>Hi! Explore a few quick questions about my work, or ask your own. This preview uses answers based on this portfolio.</p></div></div><div class="chat-bottom"><div class="prompts"><button data-question="What is your process?">Process</button><button data-question="What are your skills?">Skills</button><button data-question="What projects have you worked on?">Projects</button><button data-question="Tell me about Amber">About Amber</button></div><form id="chat-form"><input id="chat-input" aria-label="Ask a question" placeholder="Ask me about Amber…" autocomplete="off"><button aria-label="Send message" type="submit">${upIcon()}</button></form><small>Portfolio preview · answers are limited to information shown here</small></div></div></div>`}
-let path=(portfolioLocal ? decodeURIComponent(location.pathname).slice(decodeURIComponent(portfolioRoot.pathname).length).replace(/index\.html$/, '') : location.pathname).split('/').filter(Boolean),content;if(path[0]==='work'){let c=companies.find(x=>x.id===path[1]);if(c){let p=all.find(x=>x.company.id===c.id&&x.pi===Number(path[2])-1);if(path[2]&&!p)location.replace(portfolioURL(`/work/${c.id}/`));content=p?casePage(p):companyPage(c)}else{location.replace(portfolioURL('/#work'));content=home()}}else content=home();app.innerHTML=portfolioMarkup(header()+content+footer()+imageViewerMarkup()+resumeViewerMarkup());
+let locationPath=decodeURIComponent(location.pathname),rootPath=decodeURIComponent(portfolioRoot.pathname);
+let localPath=locationPath.startsWith(rootPath)?locationPath.slice(rootPath.length):locationPath;
+let path=localPath.replace(/index\.html$/, '').split('/').filter(Boolean),content;
+// Café iframe routes use an existing portfolio/index.html rather than depending on
+// a separately deployed index.html for every project on GitHub Pages.
+const cafeCaseRoute = new URLSearchParams(location.search).get('case');
+if(cafeCaseRoute && new URLSearchParams(location.search).has('cafe')) {
+ const routeParts=cafeCaseRoute.split('/').filter(Boolean);
+ if(routeParts.length>=1 && routeParts.length<=2 && /^[a-z0-9-]+$/.test(routeParts[0]) &&
+    (routeParts.length===1 || /^[1-9][0-9]*$/.test(routeParts[1]))) {
+  path=['work',...routeParts];
+ }
+}
+if(path[0]==='work'){let c=companies.find(x=>x.id===path[1]);if(c){let p=all.find(x=>x.company.id===c.id&&x.pi===Number(path[2])-1);if(path[2]&&!p)location.replace(portfolioURL(`/work/${c.id}/`));content=p?casePage(p):companyPage(c)}else{location.replace(portfolioURL('/#work'));content=home()}}else content=home();app.innerHTML=portfolioMarkup(header()+content+footer()+imageViewerMarkup()+resumeViewerMarkup());
 // The top anchor is outside the sticky header; every route scrolls its own page.
 document.querySelector('.footer a[href="#page-top"]')?.addEventListener('click',event=>{event.preventDefault();window.scrollTo({top:0,left:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})});
 
@@ -204,4 +217,17 @@ const glow=document.createElement('div');glow.className='mouse-glow';document.bo
 
 // Render the resume locally instead of embedding Chrome's PDF plugin.
 function resumeViewerMarkup(){return `<dialog class="resume-viewer" id="resume-viewer" aria-labelledby="resume-viewer-title"><div class="resume-viewer-head"><h2 id="resume-viewer-title">Resume</h2><div class="resume-viewer-actions"><div class="resume-zoom-controls" role="group" aria-label="PDF zoom"><button type="button" id="resume-zoom-out" aria-label="Zoom out">−</button><output id="resume-zoom-level">100%</output><button type="button" id="resume-zoom-in" aria-label="Zoom in">+</button><button type="button" id="resume-fit">Fit width</button><button type="button" id="resume-fit-height" aria-pressed="true">Fit height</button></div><a class="resume-download" href="/assets/amber-tang-2026-resume.pdf?v=20261018-updated" download="Amber-Tang-Resume.pdf">Download PDF</a><button type="button" class="resume-close" aria-label="Close resume viewer" autofocus><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></div><div class="resume-document" tabindex="0" aria-label="Resume document, scroll to read"><p id="resume-pdf-status" role="status" hidden></p><div class="resume-page-host"></div></div><p class="resume-viewer-help">Use + / − to zoom · <a href="/assets/amber-tang-2026-resume.pdf?v=20261018-updated">Open PDF directly</a></p></dialog>`}
-if(portfolioLocal){const resumeScript=document.createElement('script');resumeScript.src=new URL('resume-local.js',portfolioRoot).href;document.body.appendChild(resumeScript)}else{import('/resume-viewer.mjs?v=pdf-fast-fit-20261018')}
+if(portfolioLocal){const resumeScript=document.createElement('script');resumeScript.src=new URL('resume-local.js',portfolioRoot).href;document.body.appendChild(resumeScript)}else{import(new URL('resume-viewer.mjs?v=pdf-fast-fit-20261018',portfolioRoot).href)}
+
+
+if(cafeEmbed){
+ document.addEventListener('click',function(event){
+  const a=event.target.closest?.('a[href]');if(!a||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  let u;try{u=new URL(a.href,location.href)}catch{return}
+  if(u.origin!==location.origin)return;
+  if(!u.pathname.startsWith(portfolioRoot.pathname+'work/'))return;
+  const sub=u.pathname.slice((portfolioRoot.pathname+'work/').length).split('/').filter(Boolean);
+  if(!sub.length||sub.length>2||!sub.every(s=>/^[a-z0-9-]+$/.test(s)))return;
+  event.preventDefault();location.href=new URL('index.html?cafe=1&case='+encodeURIComponent(sub.join('/'))+u.hash,portfolioRoot).href;
+ },true);
+}

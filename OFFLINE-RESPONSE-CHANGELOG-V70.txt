@@ -1,0 +1,38 @@
+AMBER CAFÉ V70 — OFFLINE RESPONSE CHANGE LOG
+
+Removed entire topics (not used for offline matching):
+- 10: Notifications vs homepage
+- 11: Paywall experiment
+- 12: Communication style
+- 17: Healthsherpa
+- 18: Renewal
+- 19: Calendly
+- 20: Monetization
+- 21: Ukg
+- 22: Research
+- 23: Engineering
+- 26: Side quest
+- 27: Hobby
+- 29: Identify an opportunity
+- 37: Ask for help
+- 40: Business strategy
+- 41: Why change jobs
+- 42: Why interested in this company
+- 43: Loom
+- 44: Earlier career
+
+Replacement-field edits:
+- 03: Craft and pragmatism
+- 04: Outside of work
+- 05: What industries
+- 09: Disagree
+
+Direct edits to CURRENT RESPONSE:
+- 13: Design systems
+- 14: 0 to 1
+- 16: Build this portfolio
+- 24: Metrics
+
+Review note: In #04, the submitted replacement begins "hen I’m not designing". It has been preserved literally; please confirm whether you intended "When".
+
+Original full-length source material for live AI RAG remains in backend sources.json and other knowledge documents. Deleted topics are removed from OFFLINE fallback only. If you want topics excluded from live AI too, those original documents will need separate review.

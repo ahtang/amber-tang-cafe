@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amber’s Portfolio Café — Level Editor</title><style>
+<!doctype html><html lang="en"><head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Amber’s Portfolio Café</title><style>
 html,body{margin:0;background:#000;color:#f3eddc;font-family:system-ui,sans-serif;width:100%;height:100%;overflow:hidden}
 #app{width:100%;height:100vh;height:100dvh;min-height:0;display:flex;align-items:stretch;background:#000}
 #stage{flex:1 1 0;min-width:0;min-height:0;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;background:#000}
@@ -584,7 +584,394 @@ footer{margin-top:auto;display:grid;gap:8px}.hint{position:absolute;left:14px;bo
  background:#fff; color:#232024; border-color:#d9d6d3; box-shadow:0 2px 0 #ece8e4;
 }
 </style>
-</head><body><div id="app"><main id="stage"><canvas id="game" width="1874" height="1398" tabindex="0" aria-label="Café level editor and playable game"></canvas><div class="hint" id="stageHint">Click Test to walk around; use WASD / arrow keys</div></main>
+
+<style id="cafe-v83-loader-style">
+#cafeInitialLoad{position:absolute;inset:0;z-index:35;display:grid;place-items:center;background:#000;pointer-events:auto;transition:opacity .36s ease;overflow:hidden}
+#cafeInitialLoad.is-done{opacity:0;pointer-events:none}
+#cafeInitialLoad .cafe-loader-surface{width:min(calc(100% - 28px),calc((100dvh - 28px) * 1874 / 1398));aspect-ratio:1874/1398;position:relative;max-width:100%;background:#504846;overflow:hidden}
+#cafeInitialLoad .cafe-loader-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2}
+#cafeInitialLoad .cafe-loader-middle{position:absolute;inset:13% 10%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:clamp(9px,2vw,26px);font-family:'DM Sans',system-ui,sans-serif;color:#fff}
+#cafeInitialLoad .cafe-loader-sprite{width:clamp(78px,11vw,150px);height:clamp(100px,15vw,190px);object-fit:contain;image-rendering:pixelated;animation:cafeLoadingWalk .45s steps(2,end) infinite alternate;filter:drop-shadow(0 5px 2px #0002)}
+#cafeInitialLoad .cafe-loader-track{width:min(66%,620px);height:clamp(7px,.75vw,11px);background:#f8f5f3;border-radius:99px;overflow:hidden}
+#cafeInitialLoad .cafe-loader-bar{height:100%;width:4%;background:#b35bd9;border-radius:99px;transition:width .23s ease;}
+#cafeInitialLoad .cafe-loader-caption{font-family:'Manrope',system-ui,sans-serif;font-weight:650;font-size:clamp(13px,1.5vw,21px);letter-spacing:-.03em;text-align:center}
+#cafeInitialLoad .cafe-loader-caption small{display:block;font:500 clamp(10px,.85vw,13px) 'DM Sans',sans-serif;opacity:.75;margin-top:6px}
+@keyframes cafeLoadingWalk{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){#cafeInitialLoad .cafe-loader-sprite{animation:none}#cafeInitialLoad .cafe-loader-bar{transition:none}}
+</style><style id="cafe-v84-mobile-style">
+/* V84 touch/mobile layer. Desktop presentation is unchanged. */
+#cafeMobileControls{display:none}
+@media (pointer:coarse), (max-width:750px){
+ html,body{overscroll-behavior:none}
+ #app{height:100dvh;flex-direction:column}
+ #stage{order:1;flex:1 1 auto;width:100%;min-height:0;padding:0;touch-action:none}
+ #stage canvas{width:min(100vw,calc(100dvh * 1874 / 1398));max-height:calc(100dvh - 116px);height:auto;touch-action:none}
+ #sidebar{display:none!important}
+ #sandboxBadge{display:none!important}
+ #stageHint{display:none!important}
+ #cafeMobileControls{display:flex;position:fixed;z-index:32;bottom:max(9px,env(safe-area-inset-bottom));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));height:104px;align-items:center;justify-content:space-between;pointer-events:none;font-family:Manrope,'DM Sans',sans-serif}
+ #cafeMobileStick{position:relative;flex:0 0 98px;height:98px;border-radius:50%;background:#29202abb;border:2px solid #f8edddaa;box-shadow:0 5px 18px #0008;touch-action:none;pointer-events:auto}
+ #cafeMobileStickKnob{position:absolute;width:42px;height:42px;left:26px;top:26px;border-radius:50%;background:#c29ae8;border:2px solid #fff9;box-shadow:0 2px 10px #0008;pointer-events:none;transform:translate(0,0)}
+ .cafe-mobile-actions{display:flex;gap:9px;align-items:center;pointer-events:auto}
+ .cafe-mobile-button{border:2px solid #ffffffa8!important;border-radius:16px!important;background:#44265cdd!important;color:white!important;min-width:66px;min-height:54px;padding:9px 12px!important;font-size:12px!important;font-weight:800!important;box-shadow:0 5px 15px #0008;touch-action:manipulation}
+ #cafeMobileInteract{min-width:96px;background:#8350aeed!important}
+ #portfolioSandbox .sandbox-inner{left:0!important;right:0!important;top:0!important;bottom:0!important;border-radius:0!important;max-width:100vw!important;max-height:100dvh!important}
+ #portfolioSandbox #sandboxToolbar{min-height:50px;padding:7px 11px!important;gap:5px}
+ #sandboxToolbar button{min-height:40px;touch-action:manipulation}
+ #portfolioSandbox iframe{max-width:100%;min-width:0}
+ #resumeStandalone{overflow:auto;overscroll-behavior:contain}
+ #resumeStandalone .resume-actions{flex-wrap:wrap;gap:6px}
+ #musicDialog,#dialog{width:min(100%,520px)!important;max-height:calc(100dvh - 24px)!important}
+ #cafeAmberChat,#cafeReviewModal,#arcadeModal{max-height:100dvh;overscroll-behavior:contain}
+ button,[role=button],input[type=range]{touch-action:manipulation}
+}
+@media (pointer:coarse) and (orientation:portrait){
+ #stage canvas{width:100vw;max-height:calc(100dvh - 130px)}
+ #cafeMobileControls{bottom:max(10px,env(safe-area-inset-bottom));height:112px}
+}
+@media (pointer:coarse) and (orientation:landscape){
+ #stage canvas{width:min(100vw,calc(100dvh * 1874 / 1398));max-height:100dvh}
+ #cafeMobileControls{height:85px}
+ #cafeMobileStick{transform:scale(.82);transform-origin:left bottom}
+}
+
+/* V85 — Player-only layout: keep editor DOM for game compatibility, hide editor UI. */
+#sidebar,#stageHint,#sandboxBadge,#sandboxQuick{display:none!important}
+#app{display:flex!important;flex-direction:row!important;align-items:stretch!important}
+#stage{flex:1 1 100%!important;order:0!important;width:100%!important;min-height:0!important}
+#stage>canvas#game{max-width:100%!important}
+</style>
+<style id="cafe-v86-mobile-frame-and-arcade">
+/* Full-page portfolio, PDF, and other overlays remain inside the wooden border on mobile. */
+@media (max-width: 900px), (pointer: coarse) {
+ #portfolioSandbox .sandbox-inner{left:5.7%!important;right:5.7%!important;top:6.5%!important;bottom:6.5%!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;border-radius:12px!important;box-sizing:border-box!important}
+ #portfolioSandbox #sandboxBody{min-height:0!important;overflow:hidden!important}
+ #portfolioSandbox iframe,#portfolioSandbox #resumeStandalone{width:100%!important;max-width:100%!important;min-width:0!important}
+ #arcadeModal{padding:5.4% 6%!important;align-items:center!important;justify-content:center!important}
+ #arcadeDialog{width:100%!important;max-height:100%!important;min-height:0!important}
+ #arcadeDialog>.arcadeBody{padding:8px 8px 12px!important;gap:8px!important;justify-content:flex-start!important;overflow-y:auto!important}
+ #arcadePlay{flex:0 0 auto!important;max-height:none!important;width:100%!important;gap:8px!important;align-items:center!important;justify-content:center!important}
+ #arcadeModal #arcadeCanvas{max-width:calc(100% - 104px)!important;max-height:min(43dvh,390px)!important;width:auto!important;height:auto!important;object-fit:contain!important;min-width:0!important;flex:0 1 auto!important}
+ #arcadeModal[data-kind="snake"] #arcadeCanvas{max-height:min(38dvh,310px)!important;max-width:calc(100% - 95px)!important}
+ #arcadeModal .arcadeSidebar{min-width:76px!important;max-width:100px!important;gap:5px!important}
+ #arcadeModal .arcadeStat{padding:5px!important;font-size:11px!important}
+ #arcadeModal .arcadeStat strong{font-size:15px!important}
+ #arcadeModal #arcadeNext,#arcadeModal #arcadeHold{width:54px!important;height:54px!important}
+ #arcadeModal .arcadeHead{padding:8px 11px!important}
+ #arcadeModal .arcadeHead h2{font-size:16px!important}
+ #arcadePlayHint{display:none!important}
+ #arcadeTouchControls[hidden]{display:none!important}
+ #arcadeTouchControls{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;width:100%;touch-action:none}
+ .arcade-touch-directions{display:grid;grid-template-columns:repeat(3,minmax(49px,62px));grid-template-rows:repeat(2,47px);gap:5px;justify-content:center}
+ .arcade-touch-actions{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+ #arcadeTouchControls button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #aa8bc9;border-radius:12px;background:#efe5f8;color:#42245d;min-width:49px;min-height:45px;font:700 14px 'DM Sans',sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;padding:6px 10px}
+ #arcadeTouchControls button:active,#arcadeTouchControls button.is-pressed{background:#7d4cab;color:white;border-color:#7d4cab}
+ #arcadeTouchControls button:focus-visible{outline:3px solid #9755dd;outline-offset:2px}
+ #arcadeTouchControls [data-action="up"]{grid-column:2;grid-row:1}
+ #arcadeTouchControls [data-action="left"]{grid-column:1;grid-row:2}
+ #arcadeTouchControls [data-action="down"]{grid-column:2;grid-row:2}
+ #arcadeTouchControls [data-action="right"]{grid-column:3;grid-row:2}
+ #arcadeTouchControls[data-kind="snake"] .arcade-touch-actions{display:none}
+ #arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions [data-action="up"]{display:none}
+ #arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions{grid-template-rows:47px}
+ #arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions [data-action="left"],#arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions [data-action="down"],#arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions [data-action="right"]{grid-row:1}
+ #cafeMobileControls{z-index:50}
+}
+@media (pointer:fine) and (min-width:901px){#arcadeTouchControls{display:none!important}}
+@media (max-height:650px) and (orientation:landscape){
+ #arcadeModal #arcadeCanvas{max-height:calc(100dvh - 155px)!important}
+ #arcadeTouchControls{gap:4px}
+ .arcade-touch-directions{grid-template-rows:repeat(2,36px);grid-template-columns:repeat(3,48px);gap:3px}
+ #arcadeTouchControls button{min-height:35px;min-width:44px;padding:3px 6px;font-size:12px}
+ #arcadeModal #arcadePlay{max-height:calc(100dvh - 170px)!important}
+}
+</style>
+<style id="cafe-v88-mobile-white-glass-fullscreen">
+/* V87: Mobile only; do not change desktop's framed modal presentation. */
+@media (max-width:750px), (pointer:coarse) {
+  /* White frosted-glass touch controllers, V88. */
+  #cafeMobileControls {
+    flex-direction:row-reverse!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    z-index:80!important;
+    gap:12px!important;
+    padding:0 3px!important;
+    box-sizing:border-box!important;
+  }
+  #cafeMobileStick {
+    flex:0 0 100px!important;
+    height:100px!important;
+    width:100px!important;
+    box-sizing:border-box!important;
+    border-radius:50%!important;
+    border:1.5px solid rgba(255,255,255,.68)!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(247,248,252,.64) 48%,rgba(229,233,242,.7))!important;
+    -webkit-backdrop-filter:blur(18px) saturate(165%)!important;
+    backdrop-filter:blur(18px) saturate(165%)!important;
+    box-shadow:inset 0 2px 5px rgba(255,255,255,.48),inset 0 -5px 14px rgba(125,139,166,.16),0 8px 27px rgba(25,35,52,.22)!important;
+  }
+  #cafeMobileStickKnob {
+    left:calc(50% - 21px)!important;
+    top:calc(50% - 21px)!important;
+    background:linear-gradient(150deg,rgba(255,255,255,.98),rgba(249,250,253,.93) 46%,rgba(219,225,236,.95))!important;
+    border:1px solid rgba(255,255,255,.84)!important;
+    box-shadow:inset 0 2px 5px rgba(255,255,255,.55),0 4px 12px rgba(49,61,81,.27)!important;
+    -webkit-backdrop-filter:blur(12px)!important;
+    backdrop-filter:blur(12px)!important;
+  }
+  #cafeMobileControls .cafe-mobile-actions {
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:10px!important;
+  }
+  #cafeMobileControls .cafe-mobile-button,
+  #cafeMobileControls #cafeMobileInteract {
+    min-width:84px!important;
+    min-height:45px!important;
+    padding:10px 14px!important;
+    border-radius:17px!important;
+    border:1px solid rgba(255,255,255,.64)!important;
+    background:linear-gradient(135deg,rgba(255,255,255,.87),rgba(246,248,252,.78) 56%,rgba(225,231,241,.82))!important;
+    color:#283044!important;
+    font-family:'Manrope','DM Sans',sans-serif!important;
+    font-size:12px!important;
+    font-weight:750!important;
+    letter-spacing:.01em!important;
+    text-shadow:0 1px 1px rgba(255,255,255,.5)!important;
+    -webkit-backdrop-filter:blur(16px) saturate(160%)!important;
+    backdrop-filter:blur(16px) saturate(160%)!important;
+    box-shadow:inset 0 1px 3px rgba(255,255,255,.5),0 5px 19px rgba(31,42,60,.2)!important;
+  }
+  #cafeMobileControls .cafe-mobile-button:active {transform:scale(.96);background:rgba(223,229,241,.93)!important}
+  #cafeMobileControls .cafe-mobile-button:focus-visible {outline:3px solid #aab9d2!important;outline-offset:2px!important}
+  /* Above frame and gameplay; fill viewport, not scene-canvas coordinates. */
+  #portfolioSandbox.is-open {
+    position:fixed!important;
+    inset:0!important;
+    left:0!important;top:0!important;right:0!important;bottom:0!important;
+    width:100vw!important;height:100dvh!important;
+    max-width:none!important;max-height:none!important;
+    margin:0!important;padding:0!important;
+    z-index:1000100!important;
+    background:#fbf9f5!important;
+    border:0!important;border-radius:0!important;
+    overflow:hidden!important;
+  }
+  #portfolioSandbox.is-open .sandbox-inner {
+    position:absolute!important;
+    inset:0!important;
+    left:0!important;top:0!important;right:0!important;bottom:0!important;
+    width:100%!important;height:100%!important;
+    max-width:none!important;max-height:none!important;
+    margin:0!important;padding:0!important;
+    border:0!important;border-radius:0!important;
+    box-shadow:none!important;
+    background:#fbf9f5!important;
+  }
+  #portfolioSandbox.is-open #sandboxFrameBorder {display:none!important}
+  #portfolioSandbox.is-open #sandboxToolbar {padding-top:max(8px,env(safe-area-inset-top))!important}
+  #portfolioSandbox.is-open #sandboxBody {min-height:0!important;flex:1 1 auto!important}
+  #portfolioSandbox.is-open #sandboxList,
+  #portfolioSandbox.is-open #sandboxFrame,
+  #portfolioSandbox.is-open #resumeStandalone {width:100%!important;height:100%!important;max-width:100%!important}
+  #portfolioSandbox.is-open #resumeDocument {overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important}
+  /* Other full-size overlays also sit above the frame on mobile. */
+  #stage>#modal:not([hidden]),#stage>#musicModal:not([hidden]),
+  #arcadeModal:not([hidden]),#cafeAmberChat:not([hidden]),#cafeReviewModal:not([hidden]) {
+    position:fixed!important;
+    inset:0!important;left:0!important;top:0!important;right:0!important;bottom:0!important;
+    width:100vw!important;height:100dvh!important;
+    max-width:none!important;max-height:none!important;
+    z-index:1000090!important;
+    box-sizing:border-box!important;
+    border-radius:0!important;
+  }
+  #stage>#modal:not([hidden]),#stage>#musicModal:not([hidden]) {padding:0!important}
+  #stage>#modal:not([hidden]) #dialog,#stage>#musicModal:not([hidden]) #musicDialog {
+    width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+    border-radius:0!important;margin:0!important;overflow:auto!important;
+  }
+  #cafeAmberChat:not([hidden]) {padding:0!important}
+  #cafeAmberChat:not([hidden]) #cafeAmberChatDialog {
+    width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+    border-radius:0!important;margin:0!important;
+  }
+  #arcadeModal:not([hidden]) {padding:0!important}
+  #arcadeModal:not([hidden]) #arcadeDialog {width:100%!important;max-width:none!important;max-height:100%!important;border-radius:0!important}
+}
+@media (pointer:coarse) and (orientation:landscape) {
+  #cafeMobileStick {transform:scale(.82)!important;transform-origin:right bottom!important}
+  #cafeMobileControls .cafe-mobile-actions {flex-direction:row!important}
+}
+</style>
+
+<style id="cafe-v89-landscape-and-arcade-controls">
+/* V89 — only mobile and touch layouts; desktop arcade and café remain unchanged. */
+@media (pointer:coarse), (max-width:750px) {
+  /* Full-screen arcade with a persistent, non-scrolling control dock. */
+  #arcadeModal:not([hidden]) #arcadeDialog {
+    height:100dvh!important;max-height:100dvh!important;width:100%!important;
+    display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  }
+  #arcadeModal #arcadeDialog > .arcadeBody {
+    flex:1 1 auto!important;min-height:0!important;overflow:auto!important;
+    display:flex!important;flex-direction:column!important;
+    padding:8px 10px!important;box-sizing:border-box!important;
+  }
+  #arcadeModal #arcadeTouchControls:not([hidden]) {
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    flex:0 0 auto!important;position:relative!important;inset:auto!important;
+    z-index:12!important;box-sizing:border-box!important;
+    width:100%!important;padding:8px 10px max(10px,env(safe-area-inset-bottom))!important;
+    background:#fbf9f5!important;border-top:1px solid #e4dfe6!important;
+    overflow:visible!important;gap:5px!important;
+  }
+  #arcadeModal #arcadeTouchControls[hidden] {display:none!important}
+  #arcadeModal #arcadePlay:not([hidden]) {
+    display:flex!important;flex:1 1 auto!important;min-height:0!important;
+    justify-content:center!important;align-items:center!important;
+  }
+  #arcadeModal #arcadeCanvas {
+    max-height:min(37dvh,350px)!important;
+    max-width:calc(100vw - 112px)!important;
+    object-fit:contain!important;
+  }
+  #arcadeModal[data-kind="snake"] #arcadeCanvas {max-height:min(35dvh,320px)!important}
+  #arcadeModal #arcadeTouchControls button {
+    -webkit-tap-highlight-color:transparent!important;touch-action:none!important;
+    user-select:none!important;-webkit-user-select:none!important;
+    min-width:44px!important;min-height:42px!important;
+  }
+  /* Hide café movement controls while a full-screen arcade is active. */
+  body:has(#arcadeModal:not([hidden])) #cafeMobileControls {visibility:hidden!important;pointer-events:none!important}
+}
+@media (pointer:coarse) and (orientation:landscape), (max-width:900px) and (orientation:landscape) {
+  /* Use the otherwise-black space to either side of the centred 1874:1398 game art. */
+  #stage > canvas#game {
+    width:min(100vw,calc(100dvh * 1874 / 1398))!important;
+    max-width:100%!important;max-height:100dvh!important;
+    height:auto!important;margin:auto!important;
+  }
+  #cafeMobileControls {
+    --cafe-side-gutter:max(0px,calc((100vw - 100dvh * 1874 / 1398) / 2));
+    display:flex!important;position:fixed!important;
+    inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;
+    width:100vw!important;height:100dvh!important;padding:0!important;
+    box-sizing:border-box!important;pointer-events:none!important;
+    flex-direction:row-reverse!important;justify-content:space-between!important;
+    align-items:center!important;z-index:80!important;
+  }
+  #cafeMobileControls .cafe-mobile-actions {
+    display:flex!important;flex-direction:column!important;justify-content:center!important;
+    align-items:center!important;gap:10px!important;
+    width:var(--cafe-side-gutter)!important;min-width:0!important;
+    height:100%!important;pointer-events:none!important;
+  }
+  #cafeMobileControls .cafe-mobile-actions > button {
+    pointer-events:auto!important;min-width:0!important;
+    width:min(94px,calc(var(--cafe-side-gutter) - 14px))!important;
+    min-height:46px!important;padding:8px 5px!important;
+  }
+  #cafeMobileStick {
+    transform:none!important;transform-origin:center!important;
+    flex:0 0 auto!important;
+    width:min(100px,calc(var(--cafe-side-gutter) - 14px))!important;
+    height:min(100px,calc(var(--cafe-side-gutter) - 14px))!important;
+    margin-inline:calc((var(--cafe-side-gutter) - min(100px,calc(var(--cafe-side-gutter) - 14px))) / 2)!important;
+    pointer-events:auto!important;
+  }
+  #cafeMobileStickKnob {left:50%!important;top:50%!important;margin-left:-21px!important;margin-top:-21px!important}
+  /* Arcade modal owns its controls; café joystick/buttons stay behind it. */
+  #arcadeModal #arcadeDialog > .arcadeBody {padding:5px 12px!important}
+  #arcadeModal #arcadeTouchControls:not([hidden]) {
+    flex-direction:row!important;justify-content:center!important;align-items:center!important;
+    padding:5px max(8px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom))!important;
+  }
+  #arcadeModal .arcade-touch-directions {grid-template-columns:repeat(3,44px)!important;grid-template-rows:repeat(2,35px)!important;gap:3px!important}
+  #arcadeModal #arcadeTouchControls[data-kind="tetris"] .arcade-touch-directions {grid-template-rows:35px!important}
+  #arcadeModal #arcadeTouchControls button {min-height:35px!important;min-width:40px!important;padding:3px 6px!important;font-size:12px!important}
+  #arcadeModal .arcade-touch-actions {gap:4px!important}
+  #arcadeModal #arcadeCanvas {max-height:calc(100dvh - 140px)!important;max-width:calc(100vw - 180px)!important}
+  #arcadeModal[data-kind="snake"] #arcadeCanvas {max-height:calc(100dvh - 135px)!important}
+}
+@media (pointer:coarse) and (orientation:portrait) {
+  #arcadeModal #arcadeTouchControls:not([hidden]) {padding-bottom:max(12px,env(safe-area-inset-bottom))!important}
+}
+</style>
+<style id="cafe-v90-mouse-preview">
+/* Opt in on desktop via ?mobilePreview=1; regular desktop appearance stays unchanged. */
+html.cafe-mobile-mouse-preview #cafeMobileControls {display:flex!important}
+html.cafe-mobile-mouse-preview #arcadeModal #arcadeTouchControls:not([hidden]) {display:flex!important;visibility:visible!important}
+html.cafe-mobile-mouse-preview #cafeMobileStick {cursor:crosshair}
+html.cafe-mobile-mouse-preview #cafeMobileControls button,
+html.cafe-mobile-mouse-preview #arcadeTouchControls button {cursor:pointer}
+</style>
+<style id="cafe-v91-white-controls-mobile-arcade-notice">
+/* Keep only one white-glass control set. Size is 85% of V90. */
+@media (pointer:coarse), (max-width:750px) {
+  #cafeMobileControls .cafe-mobile-actions > #cafeMobileMenu,
+  #cafeMobileControls .cafe-mobile-actions > #cafeMobileInteract {
+    transform:scale(.85)!important;
+    transform-origin:center center!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(231,237,245,.84))!important;
+    border:1px solid rgba(255,255,255,.9)!important;
+    color:#273043!important;
+    box-shadow:0 5px 18px rgba(22,31,49,.22),inset 0 1px 3px rgba(255,255,255,.65)!important;
+  }
+  #cafeMobileStick {
+    transform:scale(.85)!important;
+    transform-origin:center center!important;
+    background:linear-gradient(140deg,rgba(255,255,255,.92),rgba(220,230,242,.78))!important;
+    border-color:rgba(255,255,255,.9)!important;
+  }
+  #cafeMobileStickKnob {background:linear-gradient(145deg,#fff,#e7ebf3)!important}
+  /* Arcade launch notice uses the pre-existing accessible arcade dialog. */
+  #arcadeModal[data-phase="intro"] #arcadeIntro #arcadeStart[hidden]{display:none!important}
+  #arcadeModal[data-phase="intro"] #arcadeIntro h3{max-width:34ch;margin-inline:auto;text-align:center}
+  #arcadeModal[data-phase="intro"] #arcadeIntro p{text-align:center}
+}
+@media (pointer:coarse) and (orientation:landscape), (max-width:900px) and (orientation:landscape){
+  #cafeMobileStick{transform:scale(.85)!important;transform-origin:center!important}
+  #cafeMobileControls .cafe-mobile-actions > #cafeMobileMenu,
+  #cafeMobileControls .cafe-mobile-actions > #cafeMobileInteract{transform:scale(.85)!important}
+}
+html.cafe-mobile-mouse-preview #cafeMobileStick{transform:scale(.85)!important}
+html.cafe-mobile-mouse-preview #cafeMobileControls .cafe-mobile-actions > button{transform:scale(.85)!important}
+</style>
+<style id="cafe-v92-animated-walking-loader">
+/* Two existing, approved walk frames; animated in CSS so startup JS cannot stall frame changes. */
+#cafeInitialLoad .cafe-loader-sprite {
+ display:block;
+ flex:0 0 auto;
+ aspect-ratio:265/337;
+ height:auto;
+ background-image:url('assets/loader/amber_walk_strip.png');
+ background-repeat:no-repeat;
+ background-size:200% 100%;
+ background-position:left center;
+ animation:cafeV92Walk .34s linear infinite !important;
+ transform:none !important;
+ filter:drop-shadow(0 5px 2px #0002);
+}
+@keyframes cafeV92Walk {
+ 0%,49.999% { background-position:left center; }
+ 50%,100% { background-position:right center; }
+}
+@media(prefers-reduced-motion:reduce) {
+ #cafeInitialLoad .cafe-loader-sprite {animation:none !important;}
+}
+</style></head><body><div id="app"><main id="stage"><div id="cafeInitialLoad" role="status" aria-live="polite" aria-label="Loading Amber's Portfolio Café">
+ <div class="cafe-loader-surface">
+  <div class="cafe-loader-middle">
+   <div class="cafe-loader-sprite" id="cafeLoaderSprite" aria-hidden="true"></div>
+   <div class="cafe-loader-track" role="progressbar" aria-label="Loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4" id="cafeLoaderTrack"><div class="cafe-loader-bar" id="cafeLoaderBar"></div></div>
+   <div class="cafe-loader-caption" id="cafeLoaderText">Setting things up…</div>
+  </div>
+  <img class="cafe-loader-frame" src="assets/loader/frame.png" alt="" aria-hidden="true" fetchpriority="high">
+ </div>
+</div><canvas id="game" width="1874" height="1398" tabindex="0" aria-label="Amber’s Portfolio Café game"></canvas><div class="hint" id="stageHint">Click Test to walk around; use WASD / arrow keys</div></main>
 <aside id="sidebar" aria-label="Café level editor"><header><h1>☕ Café Level Editor <span class="pill">v5</span></h1><div class="muted">24 approved furniture positions preserved</div></header>
 <div class="tabs"><button id="furnitureTab" data-mode="furniture">Furniture</button><button id="collisionTab" data-mode="collision">Collisions</button><button id="interactionTab" data-mode="interaction">Interactions</button><button id="characterTab" data-mode="character">Characters</button></div>
 <div class="controls"><button id="testButton">▶ Test mode</button><button id="undoButton">↶ Undo</button><button id="redoButton">↷ Redo</button></div>
@@ -608,7 +995,15 @@ footer{margin-top:auto;display:grid;gap:8px}.hint{position:absolute;left:14px;bo
 <script id="cafe-v33-mui-icons">
 window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 5M4 20l7-7M14 11l7-7M4 4l5 5M14 14l7 7m-5 0h5v-5\"/>","close":"<path d=\"M18 6 6 18M6 6l12 12\"/>","back":"<path d=\"m15 18-6-6 6-6M9 12h11\"/>","download":"<path d=\"M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4\"/>","play":"<path d=\"m9 5 10 7-10 7z\"/>","pause":"<path d=\"M9 5v14M15 5v14\"/>","next":"<path d=\"m5 5 10 7-10 7zM19 5v14\"/>","music":"<path d=\"M9 18V5l12-2v13M9 18a3 2 0 1 1-6 0 3 2 0 0 1 6 0Zm12-2a3 2 0 1 1-6 0 3 2 0 0 1 6 0Z\"/>","zoomIn":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5M10.5 7.5v6m-3-3h6\"/>","zoomOut":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5M7.5 10.5h6\"/>","expand":"<path d=\"M4 9V4h5m6 0h5v5m0 6v5h-5M9 20H4v-5\"/>","undo":"<path d=\"M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2\"/>","redo":"<path d=\"m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2\"/>","save":"<path d=\"M5 3h12l4 4v14H3V3h2Zm2 0v7h10V3M7 21v-8h10v8\"/>","upload":"<path d=\"M12 17V4m0 0-5 5m5-5 5 5M4 17v4h16v-4\"/>","photo":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m4 17 5-5 3 3 3-4 5 6\"/>"};return `<svg class="cafe-mui-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.close}</svg>`};
 </script>
-<script src="assets/cafe-engine-assets.js"></script><script src="assets/cafe-engine-main.js"></script><div id="sandboxBadge">TEST VERSION · PORTFOLIO SANDBOX</div>
+<script id="cafe-v83-loader-controller">(function(){
+const bar=document.getElementById('cafeLoaderBar'),track=document.getElementById('cafeLoaderTrack'),text=document.getElementById('cafeLoaderText'),outer=document.getElementById('cafeInitialLoad');
+let pct=4,done=false;
+const slowTicker=setInterval(()=>{if(!done && pct<20)window.cafeLoadProgress?.(pct+1,'Setting things up…')},420);
+window.cafeLoadProgress=(value,message)=>{if(done)return;pct=Math.max(pct,Math.min(98,Math.round(value)));bar.style.width=pct+'%';track.setAttribute('aria-valuenow',String(pct));if(message)text.textContent=message};
+window.cafeLoadComplete=()=>{if(done)return;done=true;clearInterval(slowTicker);pct=100;bar.style.width='100%';track.setAttribute('aria-valuenow','100');text.textContent='Ready!';setTimeout(()=>{outer.classList.add('is-done');setTimeout(()=>outer.remove(),450)},260)};
+window.cafeLoadError=(message)=>{clearInterval(slowTicker);text.textContent='Unable to load the café';const small=document.createElement('small');small.textContent='Refresh the page to try again';text.appendChild(small);console.error('[Café startup]',message)};
+})();</script>
+<script src="assets/cafe-engine-assets.js"></script><script src="assets/cafe-engine-main.js"></script><div id="cafeMobileControls" aria-label="Mobile game controls"><div id="cafeMobileStick" role="group" aria-label="Movement joystick"><div id="cafeMobileStickKnob"></div></div><div class="cafe-mobile-actions"><button id="cafeMobileMenu" class="cafe-mobile-button" type="button">Menu</button><button id="cafeMobileInteract" class="cafe-mobile-button" type="button">Interact</button></div></div><div id="sandboxBadge">TEST VERSION · PORTFOLIO SANDBOX</div>
 <div id="portfolioSandbox" role="dialog" aria-modal="true" aria-label="Portfolio content" aria-hidden="true">
   <div class="sandbox-inner">
     <div id="sandboxToolbar"><button id="sandboxBack" type="button" hidden>← Back to projects</button><h2 id="sandboxTitle" hidden>Portfolio</h2><button id="sandboxClose" type="button" aria-label="Close portfolio modal">✕ ESC</button></div>
@@ -661,8 +1056,8 @@ window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 
  if(kind==='resume'){modal.classList.add('is-resume');list.hidden=true;frame.classList.remove('is-open');frame.removeAttribute('src');resumeBox.hidden=false;resumeViewport.scrollTo(0,0);$s('resumeExit').focus();requestAnimationFrame(showPdf);}
  else{modal.classList.remove('is-resume');resumeBox.hidden=true;frame.classList.remove('is-open');frame.removeAttribute('src');list.hidden=false;list.src='portfolio/cafe-list.html?view='+encodeURIComponent(kind);$s('sandboxTitle').textContent=kind==='selected'?'Selected works':'All projects';$s('sandboxTitle').hidden=false;$s('sandboxBack').hidden=true;list.focus();}
  }
- function openSideQuests(){child='side-quests';frame.src='portfolio/work/side-quests/index.html?cafe=1';frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
- function openProject(i){const p=projects[i];if(!p)return;child=i;frame.src='portfolio/work/'+p.url+'index.html?cafe=1';frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
+ function openSideQuests(){child='side-quests';frame.src='portfolio/index.html?cafe=1&case=side-quests';frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
+ function openProject(i){const p=projects[i];if(!p)return;child=i;frame.src='portfolio/index.html?cafe=1&case='+encodeURIComponent(p.url.replace(/\/$/,''));frame.classList.add('is-open');list.hidden=true;$s('sandboxBack').hidden=false;$s('sandboxTitle').hidden=true;frame.focus({preventScroll:true});}
  // Make the case-study iframe the initial keyboard scroll target after its page loads.
  frame.addEventListener('load',()=>{if(child===null||!modal.classList.contains('is-open'))return;
    try{const body=frame.contentDocument?.body;if(body){body.tabIndex=-1;body.focus({preventScroll:true});}}catch(err){frame.focus({preventScroll:true});}
@@ -699,7 +1094,7 @@ window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 
  </div><footer class="cafe-nav-footer">Vibe coded by me 2026 👾</footer></section>`;
  document.getElementById('stage').appendChild(cafeNav);
  function closeCafeNavMenu(){cafeNav.hidden=true;window.__cafeSandboxModalOpen=false;if(typeof keys!=='undefined')keys.clear();document.getElementById('game')?.focus({preventScroll:true});}
- function showCafeNavMenu(){if(modal.classList.contains('is-open'))return;const m=document.getElementById('musicModal');if(m&&!m.hidden)return;
+ window.cafeMobileOpenMenu=()=>showCafeNavMenu(); function showCafeNavMenu(){if(modal.classList.contains('is-open'))return;const m=document.getElementById('musicModal');if(m&&!m.hidden)return;
  cafeNav.hidden=false;window.__cafeSandboxModalOpen=true;if(typeof keys!=='undefined')keys.clear();cafeNav.querySelector('[data-cafe-action="selected"]')?.focus({preventScroll:true});}
  cafeNav.addEventListener('click',event=>{
   if(event.target===cafeNav||event.target.closest('.cafe-nav-close')){closeCafeNavMenu();return;}
@@ -722,11 +1117,7 @@ window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 
  if(/selected/i.test(id)||z.id==='hotspot-ou1jd7'){open('selected');return true;}
  if(/all.projects|shelf-all/i.test(id)||z.id==='hotspot-hynaff'){open('all');return true;}
  return false;};
- // Expose quick-opening controls for sandbox review outside walk mode.
- const quick=document.createElement('div');quick.id='sandboxQuick';quick.style='position:fixed;bottom:12px;left:12px;z-index:92;display:flex;gap:6px;flex-wrap:wrap;max-width:70vw';
- quick.innerHTML='<button type="button" data-kind="resume">Resume</button><button type="button" data-kind="selected">Selected Works</button><button type="button" data-kind="all">All Projects</button>';
- quick.querySelectorAll('button').forEach(b=>{b.style='font:600 12px system-ui;background:#282035;color:white;border:1px solid #9782aa;padding:8px 10px;border-radius:8px;cursor:pointer';b.onclick=()=>open(b.dataset.kind)});document.body.appendChild(quick);
-
+ // V85: debug-only bottom shortcuts removed; use in-game menu and hotspots.
  // Re-draw the exact scene border asset above all portfolio overlays.
  const borderCanvas=$s('sandboxFrameBorder');
  function drawBorder(){
@@ -812,6 +1203,7 @@ window.cafeMuiIcon=function(name){const paths={"shuffle":"<path d=\"m16 3 5 0 0 
   <div class="arcadeBody">
    <div id="arcadeIntro"><h3 id="arcadeIntroTitle"></h3><p id="arcadeIntroText"></p><div class="arcadeInstructions" id="arcadeInstructions"></div><button class="arcadeBtn" id="arcadeStart" type="button">Start game</button></div>
    <div id="arcadePlay" hidden><canvas id="arcadeCanvas" width="240" height="480" aria-label="Arcade game board"></canvas><aside class="arcadeSidebar"><div class="arcadeStat" id="arcadeTimeStat">Time<strong id="arcadeTime">0:00.00</strong></div><div class="arcadeStat" id="arcadeLineStat">Lines<strong id="arcadeLines">0 / 40</strong></div><div class="arcadeStat" id="arcadeScoreStat" hidden>Score<strong id="arcadeScore">0</strong></div><div class="arcadeStat" id="arcadeNextStat">Next<canvas id="arcadeNext" width="76" height="76"></canvas></div><div class="arcadeStat" id="arcadeHoldStat">Hold<canvas id="arcadeHold" width="76" height="76"></canvas></div><p id="arcadePlayHint"></p></aside></div>
+   <div id="arcadeTouchControls" data-kind="tetris" aria-label="Touch arcade controls" hidden><div class="arcade-touch-directions" role="group" aria-label="Movement"><button type="button" data-action="up" aria-label="Up">▲</button><button type="button" data-action="left" aria-label="Left">◀</button><button type="button" data-action="down" aria-label="Down">▼</button><button type="button" data-action="right" aria-label="Right">▶</button></div><div class="arcade-touch-actions" role="group" aria-label="Tetris actions"><button type="button" data-action="rotate">Rotate ↻</button><button type="button" data-action="hold">Hold</button><button type="button" data-action="drop">Drop</button></div><button type="button" data-action="pause">Pause</button></div>
    <div id="arcadeFinish" hidden><div class="arcadeFinishCard"><h3 id="arcadeFinishTitle"></h3><p id="arcadeFinishDescription"></p><div id="arcadeResult"></div><button class="arcadeBtn" id="arcadeReplay" type="button">Play again</button></div></div>
   </div>
  </section>
@@ -824,6 +1216,9 @@ const $=id=>document.getElementById(id);
 const modal=$('arcadeModal'), dialog=$('arcadeDialog'), board=$('arcadeCanvas'), ctx=board.getContext('2d'), nextCtx=$('arcadeNext').getContext('2d'), holdCtx=$('arcadeHold').getContext('2d');
 $('stage').appendChild(modal);
 const intro=$('arcadeIntro'),playing=$('arcadePlay'),finish=$('arcadeFinish');
+// Keep the touch controller outside the scrolling arcade body so it stays reachable.
+const arcadeControlsDock=$('arcadeTouchControls');
+if(arcadeControlsDock&&arcadeControlsDock.parentElement!==dialog)dialog.appendChild(arcadeControlsDock);
 const palette=['','#b68af0','#6aabf4','#f2af6d','#e7d66a','#7cceaa','#cc8ef3','#ee8cad'];
 const shapes=[null,[[1,1,1,1]],[[2,0,0],[2,2,2]],[[0,0,3],[3,3,3]],[[4,4],[4,4]],[[0,5,5],[5,5,0]],[[0,6,0],[6,6,6]],[[7,7,0],[0,7,7]]];
 let kind='tetris',phase='intro',state=null,raf=0,lastFrame=0,previousFocus=null;
@@ -832,20 +1227,38 @@ function beep(type){try{const A=window.AudioContext||window.webkitAudioContext;i
 const formatTime=ms=>{const cent=Math.floor(Math.max(0,ms)/10),sec=Math.floor(cent/100);return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+'.'+String(cent%100).padStart(2,'0')};
 const rand=n=>Math.floor(Math.random()*n);
 const copyShape=id=>shapes[id].map(row=>row.slice());
-function setPhase(value){phase=value;modal.dataset.phase=value;intro.hidden=value!=='intro';playing.hidden=value==='intro';finish.hidden=value!=='finish';}
+function setPhase(value){phase=value;modal.dataset.phase=value;intro.hidden=value!=='intro';playing.hidden=value!=='playing';finish.hidden=value!=='finish';$('arcadeTouchControls').hidden=value!=='playing';}
 function stopLoop(){cancelAnimationFrame(raf);raf=0;lastFrame=0;}
 function open(type){if(!modal.hidden||$('portfolioSandbox')?.classList.contains('is-open')||!$('musicModal').hidden||!$('modal').hidden)return;
+ // V91: keep desktop games untouched; mobile visitors get an accessible notice.
+ if(window.matchMedia('(pointer:coarse), (max-width:900px)').matches || new URLSearchParams(location.search).has('mobilePreview')){
+   previousFocus=document.activeElement;kind=type;modal.dataset.kind=type;modal.hidden=false;
+   $('arcadeTitle').textContent='Arcade';
+   $('arcadeIntroTitle').textContent='Games are only playable on desktop';
+   $('arcadeIntroText').textContent='Please visit the café on a desktop computer to play Snake or Tetris.';
+   $('arcadeInstructions').replaceChildren();
+   $('arcadeStart').hidden=true;
+   $('arcadeTouchControls').hidden=true;
+   stopLoop();heldKeys.clear();state=null;setPhase('intro');
+   $('arcadeStart').hidden=true;
+   dialog.focus({preventScroll:true});
+   return;
+ }
+ $('arcadeStart').hidden=false;
  previousFocus=document.activeElement;kind=type;modal.dataset.kind=type;modal.hidden=false;$('arcadeTitle').textContent=type==='tetris'?'Tetris · 40 lines':'Snake';
  $('arcadeIntroTitle').textContent=type==='tetris'?'Tetris sprint':'Snake run';
  $('arcadeIntroText').textContent=type==='tetris'?'Clear 40 lines as fast as you can':'Collect food, grow longer. How high can you score?';
  $('arcadeInstructions').innerHTML=type==='tetris'?'<b>How to play</b><div class="arcade-instruction-row"><span>Move pieces</span><span class="arcade-instruction-keys"><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span class="arcade-key-separator">or</span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div><div class="arcade-instruction-row"><span>Rotate clockwise</span><span class="arcade-instruction-keys"><kbd>↑</kbd><span class="arcade-key-separator">or</span><kbd>W</kbd></span></div><div class="arcade-instruction-row"><span>Hold or swap a piece</span><span class="arcade-instruction-keys"><kbd>Shift</kbd></span></div><div class="arcade-instruction-row"><span>Hard drop</span><span class="arcade-instruction-keys"><kbd>Space</kbd></span></div>':'<b>How to play</b><div class="arcade-instruction-row"><span>Turn</span><span class="arcade-instruction-keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd><span class="arcade-key-separator">or</span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div><div class="arcade-instruction-row"><span>Eat purple food to earn 10 points</span></div><div class="arcade-instruction-row"><span>Avoid walls and your tail</span></div>';
+ const touchArcade=window.matchMedia('(pointer:coarse),(max-width:900px)').matches;
+ if(touchArcade){$('arcadeInstructions').innerHTML=type==='snake'?'<b>Touch controls</b><div class="arcade-instruction-row">Use the on-screen ▲ ◀ ▼ ▶ buttons to turn your snake.</div><div class="arcade-instruction-row">Eat purple food for 10 points. Avoid walls and your tail.</div><div class="arcade-instruction-row">Tap Pause to pause or resume.</div>':'<b>Touch controls</b><div class="arcade-instruction-row">◀ ▶ move pieces · ▼ soft drop</div><div class="arcade-instruction-row">Rotate ↻ turns pieces · Hold swaps the piece</div><div class="arcade-instruction-row">Drop places it instantly · Pause pauses the game</div>';}
+ $('arcadeTouchControls').dataset.kind=type;
  $('arcadeStart').textContent='Start game';
  stopLoop();heldKeys.clear();state=null;setPhase('intro');$('arcadeScoreStat').hidden=type!=='snake';$('arcadeTimeStat').hidden=type==='snake';$('arcadeLineStat').hidden=type==='snake';$('arcadeNextStat').hidden=type==='snake';$('arcadeHoldStat').hidden=type==='snake';
- $('arcadePlayHint').textContent=type==='tetris'?'← → move · ↑ rotate · Space hard drop · P pause':'Arrows / WASD turn · P pause';
+ $('arcadePlayHint').textContent=touchArcade?'Use the on-screen touch buttons':(type==='tetris'?'← → move · ↑ rotate · Space hard drop · P pause':'Arrows / WASD turn · P pause');
  dialog.focus({preventScroll:true});
 }
 window.cafeArcadeOpen=open;
-function close(){stopLoop();heldKeys.clear();modal.hidden=true;state=null;phase='intro';if(typeof keys!=='undefined')keys.clear();const target=$('game');target?.focus({preventScroll:true});}
+function close(){stopLoop();stopTouchRepeat();heldKeys.clear();modal.hidden=true;state=null;phase='intro';if(typeof keys!=='undefined')keys.clear();const target=$('game');target?.focus({preventScroll:true});}
 $('arcadeClose').addEventListener('click',close);
 function start(){stopLoop();heldKeys.clear();finish.style.removeProperty('--arcade-final-board');setPhase('playing');if(kind==='tetris'){board.width=240;board.height=480;startTetris()}else{board.width=400;board.height=400;startSnake()}dialog.focus({preventScroll:true});raf=requestAnimationFrame(loop)}
 $('arcadeStart').addEventListener('click',start);$('arcadeReplay').addEventListener('click',start);
@@ -902,6 +1315,27 @@ function keydown(e){if(modal.hidden)return;const key=e.key.toLowerCase();if(['ar
  }
 }
 function keyup(e){if(modal.hidden)return;heldKeys.delete(e.key.toLowerCase());if(['arrowleft','arrowright','arrowup','arrowdown',' ','w','a','s','d','shift'].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation()}}
+// Touch UI feeds existing arcade state transitions rather than synthetic keyboard events.
+ const touchPanel=$('arcadeTouchControls');let touchHoldTimer=null,touchHoldDelay=null;
+ function touchAction(action){if(phase!=='playing'||!state)return;
+  if(action==='pause'){state.paused=!state.paused;const b=touchPanel.querySelector('[data-action="pause"]');if(b)b.textContent=state.paused?'Resume':'Pause';return}
+  if(state.paused)return;
+  if(kind==='snake'){
+   const dirs={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+   const d=dirs[action];if(d&&!(d.x===-state.dir.x&&d.y===-state.dir.y))state.pending=d;
+   return;
+  }
+  if(action==='left')moveT(-1,0);else if(action==='right')moveT(1,0);
+  else if(action==='down')moveT(0,1);else if(action==='rotate'||action==='up')rotate(1);
+  else if(action==='hold')holdPiece();else if(action==='drop')dropT();
+  if(phase==='playing')drawTetris();
+ }
+ function stopTouchRepeat(){clearInterval(touchHoldTimer);clearTimeout(touchHoldDelay);touchHoldTimer=null;touchHoldDelay=null;touchPanel.querySelectorAll('.is-pressed').forEach(b=>b.classList.remove('is-pressed'))}
+ touchPanel.addEventListener('pointerdown',e=>{const b=e.target.closest('button[data-action]');if(!b)return;e.preventDefault();e.stopPropagation();stopTouchRepeat();const action=b.dataset.action;b.classList.add('is-pressed');try{b.setPointerCapture(e.pointerId)}catch(_e){}touchAction(action);
+  if(kind==='tetris'&&['left','right','down'].includes(action)){touchHoldDelay=setTimeout(()=>{touchHoldTimer=setInterval(()=>touchAction(action),action==='down'?65:85)},180)}
+ });
+ for(const eventName of ['pointerup','pointercancel','lostpointercapture'])touchPanel.addEventListener(eventName,stopTouchRepeat);
+ touchPanel.addEventListener('click',e=>{if(e.detail!==0)return;const b=e.target.closest('button[data-action]');if(b){e.preventDefault();touchAction(b.dataset.action)}});
 window.addEventListener('keyup',keyup,true);
 window.addEventListener('keydown',keydown,true);
 modal.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -982,4 +1416,42 @@ window.addEventListener('blur',()=>{if(phase==='playing'&&state)state.paused=tru
 #cafeReviewLinkedIn:hover,#cafeReviewLinkedIn:focus-visible{background:#fff!important;color:#343039!important;border-color:#8159bc!important;outline:2px solid #8159bc!important;outline-offset:2px!important;box-shadow:none!important}
 </style>
 <script defer src="assets/cafe-keyboard-parent.js"></script>
-</body></html>
+<script id="cafe-v84-mobile-script">
+(function(){
+ const preview=new URLSearchParams(location.search).has('mobilePreview');
+ const touch=matchMedia('(pointer:coarse)').matches||matchMedia('(max-width:900px)').matches||preview;
+ if(!touch)return;
+ if(preview)document.documentElement.classList.add('cafe-mobile-mouse-preview');
+ const controls=document.getElementById('cafeMobileControls');if(!controls)return;
+ controls.style.display='flex';
+ const bridge=()=>window.cafeMobileBridge;
+ const stick=document.getElementById('cafeMobileStick'),knob=document.getElementById('cafeMobileStickKnob');
+ let stickId=null,clickPulse=null,pressAt=0,pressX=0,pressY=0,dragged=false;
+ function setStick(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  const vx=e.clientX-cx,vy=e.clientY-cy,len=Math.hypot(vx,vy),max=r.width*.34;
+  const x=len>max?vx/len:vx/max,y=len>max?vy/len:vy/max;
+  knob.style.transform=`translate(${x*max}px,${y*max}px)`;bridge()?.setStick(x,y);
+ }
+ function stop(){stickId=null;knob.style.transform='translate(0,0)';bridge()?.setStick(0,0)}
+ stick.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType==='mouse')return;
+  e.preventDefault();clearTimeout(clickPulse);stickId=e.pointerId;pressAt=performance.now();pressX=e.clientX;pressY=e.clientY;dragged=false;
+  try{stick.setPointerCapture(e.pointerId)}catch(_e){}setStick(e)});
+ stick.addEventListener('pointermove',e=>{if(e.pointerId===stickId){e.preventDefault();if(Math.hypot(e.clientX-pressX,e.clientY-pressY)>9)dragged=true;setStick(e)}});
+ stick.addEventListener('pointerup',e=>{if(e.pointerId!==stickId)return;
+  // Mouse click = a short directional step; mouse drag/touch hold = continuous movement.
+  const shortMouseClick=e.pointerType==='mouse'&&!dragged&&performance.now()-pressAt<260;
+  if(shortMouseClick){setStick(e);stickId=null;clickPulse=setTimeout(stop,185)}else stop();
+ });
+ for(const type of ['pointercancel','lostpointercapture'])stick.addEventListener(type,e=>{if(e.pointerId===stickId)stop()});
+ document.getElementById('cafeMobileInteract').addEventListener('click',()=>bridge()?.interact());
+ document.getElementById('cafeMobileMenu').addEventListener('click',()=>{
+  if(typeof window.cafeMobileOpenMenu==='function')window.cafeMobileOpenMenu();
+ });
+ function ready(){if(bridge()){bridge().start();return true}return false}
+ if(!ready())window.addEventListener('load',()=>{if(!ready()){let n=0;const poll=setInterval(()=>{if(ready()||++n>50)clearInterval(poll)},100)}});
+ window.addEventListener('blur',stop);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
+ // Orientation changes never reset the canvas state or reload any iframe.
+ window.addEventListener('orientationchange',()=>{stop()});
+})();
+</script></body></html>

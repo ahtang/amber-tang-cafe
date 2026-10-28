@@ -1667,3 +1667,15 @@ html{scrollbar-gutter:stable}
 /* Café embedded case-study only: remove parent site navigation and footer controls. */
 .cafe-embed .site-header,.cafe-embed .footer,.cafe-embed .back-link,.cafe-embed .case-breadcrumb,.cafe-embed .case-footer-band,.cafe-embed .case-next-work,.cafe-embed .case-footer-actions{display:none!important}
 .cafe-embed{scroll-padding-top:0!important}
+
+/* V86 — mobile project cards: artwork first, tighter vertical content rhythm. */
+@media(max-width:800px){
+ .project-card.split-card,.carousel .project-card.split-card,.company-projects .project-card.split-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important}
+ .project-card.split-card .project-media{grid-column:1!important;grid-row:1!important;order:0!important;width:100%!important;min-height:0!important;aspect-ratio:4/3!important}
+ .project-card.split-card .project-info{grid-column:1!important;grid-row:2!important;order:1!important;padding:15px 18px!important}
+ .project-card.split-card .project-copy{gap:6px!important}
+ .project-card.split-card .project-title{margin-bottom:9px!important}
+ .project-card.split-card .project-meta{gap:9px!important}
+ .project-card.split-card .view-project{margin-top:12px!important}
+}
+@media(max-width:480px){.project-card.split-card .project-info{padding:12px 15px!important}}

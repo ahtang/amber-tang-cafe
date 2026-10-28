@@ -69,7 +69,7 @@ async function ask(raw, fixedResponse){const question=String(raw||'').trim();if(
  const typing=bubble('Thinking…','amber');typing.classList.add('amber-chat-typing');
  try{const reply=await fetch(window.CAFE_CHAT_API_URL||'/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:question,history:history.slice(-12)})});const data=await reply.json();if(!reply.ok)throw Error(data.error||'The chat service is unavailable.');
   typing.remove();bubble(data.answer,'amber',data.relatedProject);history.push({role:'user',content:question},{role:'assistant',content:data.answer});history=history.slice(-12);
- }catch(err){typing.remove();const answer=offlineReply(question);bubble(answer,'amber');history.push({role:'user',content:question},{role:'assistant',content:answer});history=history.slice(-12);}
+ }catch(err){console.warn('[Amber Café] Live AI unavailable; using offline response:',err?.message||err);typing.remove();const answer=offlineReply(question);bubble(answer,'amber');history.push({role:'user',content:question},{role:'assistant',content:answer});history=history.slice(-12);}
  finally{busy=false;input.disabled=false;document.querySelectorAll('#amberChatSuggestions button').forEach(b=>b.disabled=false);$('amberChatSend').disabled=false;if(!modal.hidden)input.focus();bottom();}}
 $('amberChatSuggestions').replaceChildren(...prompts.map(q=>{const b=document.createElement('button');b.type='button';b.textContent=q;b.addEventListener('click',()=>{if(q==='Show me your top projects.'){close();window.dispatchEvent(new Event('cafe-open-selected-works'));return;}
  if(q===strengthsChipQuestion){

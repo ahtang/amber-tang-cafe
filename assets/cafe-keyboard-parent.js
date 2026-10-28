@@ -59,6 +59,21 @@ window.addEventListener('keydown',e=>{const m=layer();if(!m||e.defaultPrevented|
     }
   }
   return;}
+ // V81: Quick Menu is a list: Up/Down travels through its actions, including the portfolio link.
+ if(m.id==='cafeNavMenu'&&['ArrowUp','ArrowDown'].includes(k)){
+  const items=[...m.querySelectorAll('.cafe-nav-body button:not([disabled]),.cafe-nav-body a[href]')].filter(canUse);
+  if(items.length){const i=items.indexOf(focused);const next=i<0?(k==='ArrowDown'?0:items.length-1):(i+(k==='ArrowDown'?1:-1)+items.length)%items.length;
+   e.preventDefault();e.stopImmediatePropagation();items[next].focus({preventScroll:true});choose(items[next]);}
+  return;
+ }
+ // V81: Left/Right moves between all music-modal buttons in visual DOM order.
+ // Don't steal keys from native sliders or input fields.
+ if(m.id==='musicModal'&&['ArrowLeft','ArrowRight'].includes(k)&&!native(focused)){
+  const items=[...m.querySelectorAll('button:not([disabled])')].filter(canUse);
+  if(items.length){const i=items.indexOf(focused);const next=i<0?(k==='ArrowRight'?0:items.length-1):(i+(k==='ArrowRight'?1:-1)+items.length)%items.length;
+   e.preventDefault();e.stopImmediatePropagation();items[next].focus({preventScroll:true});choose(items[next]);}
+  return;
+ }
  if(native(focused))return;
  // Preserve the built-in arcade keyboard gameplay and menu-specific actions.
  if(m.id==='arcadeModal'&&m.dataset.phase==='playing')return;
